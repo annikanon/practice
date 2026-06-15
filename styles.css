@@ -332,6 +332,20 @@ button {
   line-height: 1.8;
 }
 
+.answer-guide {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 22px;
+  color: var(--muted);
+  line-height: 1.85;
+}
+
+.answer-guide li::marker {
+  color: var(--teal);
+  font-weight: 900;
+}
+
 .math-formula {
   overflow-x: auto;
   padding: 18px;

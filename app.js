@@ -876,6 +876,42 @@ function getDetailedExplanation(concept) {
   return `${concept.body} ${explanations[concept.category] || "この用語は、数式、データのshape、学習時の挙動、推論時の挙動を分けて理解すると実装に結び付きます。"}`;
 }
 
+function getAnswerGuide(concept) {
+  const guides = {
+    "Batch Gradient Descent": [
+      "学習率が大きい場合は、1回の更新でパラメータが大きく動きます。最適点を飛び越えて損失が振動したり、発散したりすることがあります。",
+      "学習率が小さい場合は、更新が慎重になります。安定しやすい一方で収束が遅く、限られたエポックでは十分に学習できないことがあります。",
+      "Batch Gradient Descentは全データで勾配を計算するため、更新方向は安定しやすいですが、1ステップの計算コストが大きいです。式では \\(\\eta\\) が学習率、\\(\\nabla_\\theta L\\) が損失を増やす方向なので、マイナス方向へ更新します。"
+    ],
+    "Adam": [
+      "Adamは勾配の移動平均である一次モーメントと、二乗勾配の移動平均である二次モーメントを使います。",
+      "初期値を0にすると、学習初期の移動平均が小さく偏ります。そのため \\(\\hat{m}_t=m_t/(1-\\beta_1^t)\\)、\\(\\hat{v}_t=v_t/(1-\\beta_2^t)\\) のようにバイアス補正します。",
+      "説明するときは、Momentumの考え方とRMSPropの考え方を合わせた手法、と言えると理解が伝わりやすいです。"
+    ],
+    "Batch Normalization": [
+      "BatchNormは学習時にミニバッチの平均と分散で正規化します。推論時は学習中に蓄積したrunning meanとrunning varianceを使います。",
+      "平均・分散を計算する軸は重要です。全結合ではバッチ方向、CNNでは通常N,H,W方向を使い、チャネルごとに正規化します。",
+      "gammaとbetaは、正規化で失われる可能性のあるスケールとシフトを学習し直すためのパラメータです。"
+    ],
+    "GCN": [
+      "GCNは自己ループを加えた隣接行列 \\(\\hat{A}=A+I\\) を使い、次数行列で \\(\\hat{D}^{-1/2}\\hat{A}\\hat{D}^{-1/2}\\) と正規化します。",
+      "正規化する理由は、次数の大きいノードほど集約値が大きくなりすぎるのを防ぎ、特徴量のスケールを安定させるためです。",
+      "GCNは近傍を一様な重みで集約するので、近傍ごとの重要度を学習したい場合はGATが候補になります。"
+    ],
+    "GAT": [
+      "GATは近傍ノードごとにAttention係数 \\(\\alpha_{ij}\\) を計算し、重要な近傍を強く集約します。",
+      "GCNが次数正規化で重みを決めるのに対し、GATはノード特徴から重みを学習する点が違います。",
+      "Multi-headにすると、複数の観点から近傍関係を見られ、学習が安定しやすくなります。"
+    ]
+  };
+
+  return guides[concept.title] || [
+    `${concept.title}は、まず「何を入力に取り、何を出力するか」を説明すると整理しやすいです。`,
+    `次に、数式の各記号が実装上のどの配列やテンソルに対応するかを確認します。特にshape、正規化する軸、softmaxや集約を行う軸は丁寧に見ると理解が深まります。`,
+    `最後に、学習時と推論時で挙動が変わるか、勾配がどの経路を通るか、計算量や安定性にどんな注意点があるかを自分の言葉で説明できるようにします。`
+  ];
+}
+
 function getNumpySample(concept) {
   if (concept.title === "Batch Normalization") {
     return `import numpy as np
@@ -1201,7 +1237,8 @@ function getTermDetail(concept) {
   return {
     ...detail,
     numpyCode: detail.numpyCode || getNumpySample(concept),
-    torchCode: detail.torchCode || getTorchSample(concept)
+    torchCode: detail.torchCode || getTorchSample(concept),
+    answerGuide: detail.answerGuide || getAnswerGuide(concept)
   };
 }
 
@@ -1297,7 +1334,13 @@ function renderTermDetailFromHash() {
     <div class="detail-grid">
       <section class="detail-block">
         <h3>数式・考え方</h3>
-        <div class="math-formula">${escapeHtml(detail.formula)}</div>
+        <div class="math-formula">\\[${detail.formula.replace(/^\\displaystyle\s*/, "")}\\]</div>
+      </section>
+      <section class="detail-block detail-wide">
+        <h3>説明するときの回答例</h3>
+        <ol class="answer-guide">
+          ${detail.answerGuide.map((answer) => `<li>${answer}</li>`).join("")}
+        </ol>
       </section>
       <section class="detail-block">
         <h3>NumPy実装例</h3>
@@ -1315,6 +1358,9 @@ function renderTermDetailFromHash() {
       </section>
     </div>
   `;
+  if (window.MathJax?.typesetPromise) {
+    window.MathJax.typesetPromise([termDetail]);
+  }
   termDetailSection.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
