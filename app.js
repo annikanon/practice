@@ -227,6 +227,42 @@ const concepts = [
     code: "d_loss = -np.mean(np.log(D(real)) + np.log(1 - D(fake)))\ng_loss = -np.mean(np.log(D(fake)))"
   },
   {
+    category: "GNN",
+    title: "Graph Neural Network",
+    body: "ノード、エッジ、グラフ構造を扱うニューラルネットです。近傍ノードから情報を集約して表現を更新します。",
+    code: "h_v = update(h_v, aggregate([h_u for u in neighbors_v]))"
+  },
+  {
+    category: "GNN",
+    title: "Message Passing",
+    body: "各ノードが近傍からメッセージを受け取り、集約して自身の表現を更新するGNNの基本枠組みです。",
+    code: "m_v = sum(message(h_v, h_u, e_uv) for u in neighbors_v)\nh_v = update(h_v, m_v)"
+  },
+  {
+    category: "GNN",
+    title: "GCN",
+    body: "隣接行列に自己ループを加え、次数で正規化して近傍特徴を畳み込む代表的なGNNです。",
+    code: "A_hat = A + np.eye(n)\nD_hat = np.diag(1 / np.sqrt(A_hat.sum(axis=1)))\nH = D_hat @ A_hat @ D_hat @ X @ W"
+  },
+  {
+    category: "GNN",
+    title: "GAT",
+    body: "近傍ノードごとにAttention重みを学習し、重要な近傍を強く参照するGraph Attention Networkです。",
+    code: "score_ij = leaky_relu(a.T @ np.r_[W @ h_i, W @ h_j])\nalpha_ij = softmax(score_ij)\nh_i = sum(alpha_ij * (W @ h_j) for j in neighbors_i)"
+  },
+  {
+    category: "GNN",
+    title: "GIN",
+    body: "Graph Isomorphism Networkは表現力を重視したGNNです。近傍和と自己特徴をMLPに通します。",
+    code: "h_v = mlp((1 + eps) * h_v + sum(h_u for u in neighbors_v))"
+  },
+  {
+    category: "GNN",
+    title: "GVAE",
+    body: "Graph Variational AutoEncoderは、ノード埋め込みの潜在分布からリンクや隣接行列を再構成する生成モデルです。",
+    code: "Z = mu + sigma * eps\nA_logits = Z @ Z.T\nloss = bce_with_logits(A_logits, A) + kl_loss"
+  },
+  {
     category: "評価",
     title: "Precision / Recall / F1",
     body: "不均衡データではAccuracyだけでは不十分です。適合率、再現率、F1の意味を使い分けます。",
@@ -564,6 +600,51 @@ const quizItems = [
     accepted: ["np.linalg.norm(grad)", "norm", "grad_norm"],
     explain: "勾配ノルムが閾値を超えたときだけスケールを下げます。RNN系や大規模モデルで学習安定化に使われます。",
     code: "grad_norm = np.linalg.norm(grad)\ngrad = grad * clip_norm / max(clip_norm, grad_norm)"
+  },
+  {
+    category: "GNN",
+    type: "選択問題",
+    question: "GNNのMessage Passingの説明として最も適切なものはどれか。",
+    answers: ["近傍ノードやエッジから情報を集約し、ノード表現を更新する", "画像の画素を必ず1次元系列に並べ替える", "全ノードの特徴をランダムに削除して終わる"],
+    correct: 0,
+    explain: "Message Passingでは、各ノードが隣接ノードからメッセージを受け取り、sum/mean/max/attentionなどで集約して自身の表現を更新します。GNNの多くはこの枠組みで理解できます。",
+    code: "messages = [message(h_v, h_u) for u in neighbors_v]\nh_v_next = update(h_v, aggregate(messages))"
+  },
+  {
+    category: "GNN",
+    type: "穴埋め",
+    question: "GCNで自己ループを加えた隣接行列として空欄に入るものはどれか。",
+    codePrompt: "A_hat = A + ____",
+    accepted: ["np.eye(n)", "i", "I", "eye(n)"],
+    explain: "GCNでは各ノード自身の特徴も集約に含めるため、隣接行列Aに単位行列Iを足して自己ループを加えます。その後、次数行列で対称正規化します。",
+    code: "A_hat = A + np.eye(n)\nD_hat = np.diag(1 / np.sqrt(A_hat.sum(axis=1)))\nH = D_hat @ A_hat @ D_hat @ X @ W"
+  },
+  {
+    category: "GNN",
+    type: "選択問題",
+    question: "GATがGCNと比べて明示的に学習するものはどれか。",
+    answers: ["近傍ノードごとのAttention重み", "画像のストライド幅", "VAEの再構成誤差だけ"],
+    correct: 0,
+    explain: "GATは各エッジまたは近傍ノードに対してAttention係数を計算し、重要な近傍を強く集約します。次数正規化だけで重みを決めるGCNとの重要な違いです。",
+    code: "e_ij = leaky_relu(a.T @ np.r_[W @ h_i, W @ h_j])\nalpha_ij = softmax(e_ij over neighbors)\nh_i = sum(alpha_ij * W @ h_j)"
+  },
+  {
+    category: "GNN",
+    type: "選択問題",
+    question: "GINが表現力の文脈でよく説明される理由として適切なものはどれか。",
+    answers: ["近傍特徴の和集約とMLPにより、グラフ同型性判定に近い表現力を目指すため", "Attentionを必ず使うため", "隣接行列を使わず画像だけを扱うため"],
+    correct: 0,
+    explain: "GINはWeisfeiler-Lehmanテストとの関係で説明されることが多いGNNです。sum集約はmean/maxより多重集合の違いを保持しやすく、MLPで表現力を高めます。",
+    code: "h_v_next = mlp((1 + eps) * h_v + sum(h_u for u in neighbors_v))"
+  },
+  {
+    category: "GNN",
+    type: "選択問題",
+    question: "GVAEの主な目的として最も適切なものはどれか。",
+    answers: ["ノード潜在変数からグラフ構造やリンクを再構成する", "BatchNormのrunning meanだけを推定する", "CNNのカーネルサイズを自動で整数化する"],
+    correct: 0,
+    explain: "GVAEはVAEの考え方をグラフに適用します。エンコーダでノードの潜在分布を推定し、内積デコーダなどで隣接行列やリンク確率を再構成します。",
+    code: "Z = mu + np.exp(0.5 * log_var) * eps\nA_prob = sigmoid(Z @ Z.T)\nloss = recon_bce + kl_loss"
   }
 ];
 
@@ -657,6 +738,71 @@ z = mu + np.exp(0.5 * log_var) * eps
 kl = -0.5 * np.sum(1 + log_var - mu**2 - np.exp(log_var))
 loss = recon_loss + kl`,
     points: ["再パラメータ化トリックで勾配を流す", "KL項が潜在空間を整える", "生成時は事前分布からzをサンプルする"]
+  },
+  "Graph Neural Network": {
+    formula: "h_v^(k+1) = UPDATE(h_v^k, AGGREGATE({h_u^k : u in N(v)}))",
+    detail: "GNNはグラフ構造を持つデータのためのニューラルネットです。ノード分類、リンク予測、グラフ分類などに使われます。中心は、隣接ノードから情報を集めてノード表現を更新するMessage Passingです。",
+    code: `def gnn_layer(H, A, W):
+    A_hat = A + np.eye(A.shape[0])
+    D_inv = np.diag(1 / np.maximum(A_hat.sum(axis=1), 1))
+    return relu(D_inv @ A_hat @ H @ W)`,
+    points: ["ノード特徴Xと隣接行列Aを同時に使う", "層を重ねると遠いノード情報まで伝わる", "深すぎるとover-smoothingに注意する"]
+  },
+  "Message Passing": {
+    formula: "m_v = sum_{u in N(v)} M(h_v, h_u, e_uv), h_v' = U(h_v, m_v)",
+    detail: "Message PassingはGNNを統一的に見る枠組みです。メッセージ関数、集約関数、更新関数をどう設計するかでGCN、GAT、GINなどの違いが生まれます。",
+    code: `def message_passing(H, neighbors):
+    next_H = []
+    for v, ns in enumerate(neighbors):
+        msg = np.sum([H[u] for u in ns], axis=0)
+        next_H.append(relu(H[v] + msg))
+    return np.stack(next_H)`,
+    points: ["集約関数はノード順序に依存しない必要がある", "sum/mean/max/attentionが代表例", "エッジ特徴をメッセージに含める設計もある"]
+  },
+  "GCN": {
+    formula: "H^(l+1) = sigma(D_hat^(-1/2) A_hat D_hat^(-1/2) H^(l) W^(l))",
+    detail: "GCNは隣接行列に自己ループを加え、次数行列で対称正規化してから特徴を伝播します。グラフ上の畳み込みとして理解でき、ノード分類の基本モデルとして重要です。",
+    code: `def gcn_layer(A, H, W):
+    n = A.shape[0]
+    A_hat = A + np.eye(n)
+    degree = A_hat.sum(axis=1)
+    D_inv_sqrt = np.diag(1 / np.sqrt(degree))
+    return relu(D_inv_sqrt @ A_hat @ D_inv_sqrt @ H @ W)`,
+    points: ["Aに自己ループIを加える", "次数正規化でスケールを安定化する", "近傍を一様に集約するため重要度の違いは明示的に学習しない"]
+  },
+  "GAT": {
+    formula: "h_i' = sigma(sum_{j in N(i)} alpha_ij W h_j)",
+    detail: "GATは近傍ノードごとのAttention係数alpha_ijを学習します。GCNのように次数だけで重みを決めるのではなく、ノード特徴に応じて参照する近傍の強さを変えられます。",
+    code: `def gat_scores(H, W, a):
+    Z = H @ W
+    scores = {}
+    for i in range(len(Z)):
+        for j in neighbors[i]:
+            scores[(i, j)] = leaky_relu(a @ np.r_[Z[i], Z[j]])
+    return scores`,
+    points: ["近傍ごとの重要度をAttentionで学習する", "Multi-head化して表現を安定させることが多い", "大規模グラフではエッジ数に比例した計算量に注意する"]
+  },
+  "GIN": {
+    formula: "h_v' = MLP((1 + eps) h_v + sum_{u in N(v)} h_u)",
+    detail: "GINはグラフ構造の識別能力を重視したモデルです。近傍特徴をsumで集約し、自己特徴をepsで調整してMLPへ渡します。グラフ分類でよく出てきます。",
+    code: `def gin_layer(H, neighbors, eps):
+    out = []
+    for v, ns in enumerate(neighbors):
+        agg = np.sum([H[u] for u in ns], axis=0)
+        out.append(mlp((1 + eps) * H[v] + agg))
+    return np.stack(out)`,
+    points: ["sum集約は多重集合の情報を保持しやすい", "epsは固定または学習可能", "WLテストとの関係で表現力が説明される"]
+  },
+  "GVAE": {
+    formula: "q(Z|X,A), p(A|Z) = sigmoid(ZZ^T), L = recon + KL",
+    detail: "GVAEはGraph AutoEncoderにVAEの確率的潜在変数を加えたモデルです。GCNなどのエンコーダでmuとlog_varを出し、潜在表現Zからリンク確率や隣接行列を再構成します。",
+    code: `mu = gcn_mu(A, X)
+log_var = gcn_logvar(A, X)
+eps = np.random.randn(*mu.shape)
+Z = mu + np.exp(0.5 * log_var) * eps
+A_logits = Z @ Z.T
+kl = -0.5 * np.sum(1 + log_var - mu**2 - np.exp(log_var))`,
+    points: ["リンク予測やグラフ生成の入口になる", "内積デコーダではZZ^Tから隣接確率を作る", "VAE同様に再構成項とKL項を最適化する"]
   }
 };
 
