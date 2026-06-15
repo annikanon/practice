@@ -674,7 +674,7 @@ let currentQuiz = 0;
 
 const termDetails = {
   "畳み込み": {
-    formula: "H_out = floor((H + 2P - F) / S) + 1",
+    formula: "\\displaystyle H_{out}=\\left\\lfloor \\frac{H+2P-F}{S} \\right\\rfloor + 1",
     detail: "畳み込みは、入力の局所領域に同じフィルタを滑らせて特徴を抽出する操作です。画像ではエッジ、模様、部品のような局所パターンを階層的に捉えます。全結合と違い、重み共有によりパラメータ数を抑えられる点が重要です。",
     code: `def conv2d_single_channel(x, kernel, stride=1, pad=0):
     x = np.pad(x, ((pad, pad), (pad, pad)))
@@ -691,7 +691,7 @@ const termDetails = {
     points: ["パディングは端の情報を残し、出力サイズを調整する", "ストライドを大きくすると空間サイズは小さくなる", "フィルタ数は出力チャネル数に対応する"]
   },
   "Batch Normalization": {
-    formula: "y = gamma * (x - mu_B) / sqrt(var_B + eps) + beta",
+    formula: "\\displaystyle y_i = \\gamma \\frac{x_i - \\mu_B}{\\sqrt{\\sigma_B^2 + \\epsilon}} + \\beta",
     detail: "BatchNormはミニバッチ統計量で中間表現を正規化し、スケールgammaとシフトbetaで表現力を戻します。学習時はバッチ平均・分散を使い、推論時は学習中に蓄積したrunning meanとrunning varianceを使います。",
     code: `def batch_norm_train(x, gamma, beta, eps=1e-5):
     mu = x.mean(axis=0, keepdims=True)
@@ -702,7 +702,7 @@ const termDetails = {
     points: ["学習時と推論時で統計量が違う", "gammaとbetaは学習可能パラメータ", "小さいバッチでは統計量が不安定になりやすい"]
   },
   "Layer Normalization": {
-    formula: "y = gamma * (x - mu_feature) / sqrt(var_feature + eps) + beta",
+    formula: "\\displaystyle y = \\gamma \\frac{x - \\mu_{feature}}{\\sqrt{\\sigma_{feature}^2 + \\epsilon}} + \\beta",
     detail: "LayerNormは各サンプルごとに特徴次元で正規化します。バッチ方向を使わないため、系列モデルやTransformerのようにバッチサイズが変わりやすい場面で扱いやすいです。",
     code: `def layer_norm(x, gamma, beta, eps=1e-5):
     mu = x.mean(axis=-1, keepdims=True)
@@ -711,7 +711,7 @@ const termDetails = {
     points: ["バッチサイズに依存しにくい", "TransformerではPre-LN/Post-LNの違いも重要", "正規化する軸がBatchNormと異なる"]
   },
   "Adam": {
-    formula: "m_t = beta1*m + (1-beta1)*g, v_t = beta2*v + (1-beta2)*g^2",
+    formula: "\\displaystyle m_t=\\beta_1m_{t-1}+(1-\\beta_1)g_t,\\quad v_t=\\beta_2v_{t-1}+(1-\\beta_2)g_t^2",
     detail: "AdamはMomentumのような一次モーメントと、RMSPropのような二次モーメントを組み合わせた最適化手法です。初期値0による偏りを補正するため、m_hatとv_hatを使います。",
     code: `m = beta1 * m + (1 - beta1) * grad
 v = beta2 * v + (1 - beta2) * grad**2
@@ -721,7 +721,7 @@ w -= lr * m_hat / (np.sqrt(v_hat) + eps)`,
     points: ["一次モーメントは勾配の移動平均", "二次モーメントは二乗勾配の移動平均", "AdamWではweight decayを更新式から分離する"]
   },
   "Scaled Dot-Product Attention": {
-    formula: "Attention(Q,K,V) = softmax(QK^T / sqrt(d_k))V",
+    formula: "\\displaystyle \\mathrm{Attention}(Q,K,V)=\\mathrm{softmax}\\left(\\frac{QK^\\top}{\\sqrt{d_k}}\\right)V",
     detail: "AttentionはQueryとKeyの類似度から重みを作り、その重みでValueを加重平均します。sqrt(d_k)で割るのは、内積値が大きくなりsoftmaxが飽和することを防ぐためです。",
     code: `def attention(Q, K, V):
     d_k = Q.shape[-1]
@@ -731,7 +731,7 @@ w -= lr * m_hat / (np.sqrt(v_hat) + eps)`,
     points: ["QとKで参照の強さを決める", "Vを重み付き和して出力する", "Transformerの中核演算"]
   },
   "Variational AutoEncoder": {
-    formula: "L = reconstruction_loss + D_KL(q(z|x) || p(z))",
+    formula: "\\displaystyle \\mathcal{L}=\\mathbb{E}_{q_\\phi(z|x)}[\\log p_\\theta(x|z)]-D_{KL}(q_\\phi(z|x)\\|p(z))",
     detail: "VAEは潜在変数を確率分布として学習する生成モデルです。再構成誤差だけでなく、潜在分布を標準正規分布などの事前分布に近づけるKL項を加えます。",
     code: `eps = np.random.randn(*mu.shape)
 z = mu + np.exp(0.5 * log_var) * eps
@@ -740,7 +740,7 @@ loss = recon_loss + kl`,
     points: ["再パラメータ化トリックで勾配を流す", "KL項が潜在空間を整える", "生成時は事前分布からzをサンプルする"]
   },
   "Graph Neural Network": {
-    formula: "h_v^(k+1) = UPDATE(h_v^k, AGGREGATE({h_u^k : u in N(v)}))",
+    formula: "\\displaystyle h_v^{(k+1)}=\\mathrm{UPDATE}\\left(h_v^{(k)},\\mathrm{AGGREGATE}\\{h_u^{(k)}:u\\in\\mathcal{N}(v)\\}\\right)",
     detail: "GNNはグラフ構造を持つデータのためのニューラルネットです。ノード分類、リンク予測、グラフ分類などに使われます。中心は、隣接ノードから情報を集めてノード表現を更新するMessage Passingです。",
     code: `def gnn_layer(H, A, W):
     A_hat = A + np.eye(A.shape[0])
@@ -749,7 +749,7 @@ loss = recon_loss + kl`,
     points: ["ノード特徴Xと隣接行列Aを同時に使う", "層を重ねると遠いノード情報まで伝わる", "深すぎるとover-smoothingに注意する"]
   },
   "Message Passing": {
-    formula: "m_v = sum_{u in N(v)} M(h_v, h_u, e_uv), h_v' = U(h_v, m_v)",
+    formula: "\\displaystyle m_v=\\sum_{u\\in\\mathcal{N}(v)}M(h_v,h_u,e_{uv}),\\quad h_v'=U(h_v,m_v)",
     detail: "Message PassingはGNNを統一的に見る枠組みです。メッセージ関数、集約関数、更新関数をどう設計するかでGCN、GAT、GINなどの違いが生まれます。",
     code: `def message_passing(H, neighbors):
     next_H = []
@@ -760,7 +760,7 @@ loss = recon_loss + kl`,
     points: ["集約関数はノード順序に依存しない必要がある", "sum/mean/max/attentionが代表例", "エッジ特徴をメッセージに含める設計もある"]
   },
   "GCN": {
-    formula: "H^(l+1) = sigma(D_hat^(-1/2) A_hat D_hat^(-1/2) H^(l) W^(l))",
+    formula: "\\displaystyle H^{(l+1)}=\\sigma\\left(\\hat{D}^{-1/2}\\hat{A}\\hat{D}^{-1/2}H^{(l)}W^{(l)}\\right)",
     detail: "GCNは隣接行列に自己ループを加え、次数行列で対称正規化してから特徴を伝播します。グラフ上の畳み込みとして理解でき、ノード分類の基本モデルとして重要です。",
     code: `def gcn_layer(A, H, W):
     n = A.shape[0]
@@ -771,7 +771,7 @@ loss = recon_loss + kl`,
     points: ["Aに自己ループIを加える", "次数正規化でスケールを安定化する", "近傍を一様に集約するため重要度の違いは明示的に学習しない"]
   },
   "GAT": {
-    formula: "h_i' = sigma(sum_{j in N(i)} alpha_ij W h_j)",
+    formula: "\\displaystyle h_i'=\\sigma\\left(\\sum_{j\\in\\mathcal{N}(i)}\\alpha_{ij}Wh_j\\right)",
     detail: "GATは近傍ノードごとのAttention係数alpha_ijを学習します。GCNのように次数だけで重みを決めるのではなく、ノード特徴に応じて参照する近傍の強さを変えられます。",
     code: `def gat_scores(H, W, a):
     Z = H @ W
@@ -783,7 +783,7 @@ loss = recon_loss + kl`,
     points: ["近傍ごとの重要度をAttentionで学習する", "Multi-head化して表現を安定させることが多い", "大規模グラフではエッジ数に比例した計算量に注意する"]
   },
   "GIN": {
-    formula: "h_v' = MLP((1 + eps) h_v + sum_{u in N(v)} h_u)",
+    formula: "\\displaystyle h_v'=\\mathrm{MLP}\\left((1+\\epsilon)h_v+\\sum_{u\\in\\mathcal{N}(v)}h_u\\right)",
     detail: "GINはグラフ構造の識別能力を重視したモデルです。近傍特徴をsumで集約し、自己特徴をepsで調整してMLPへ渡します。グラフ分類でよく出てきます。",
     code: `def gin_layer(H, neighbors, eps):
     out = []
@@ -794,7 +794,7 @@ loss = recon_loss + kl`,
     points: ["sum集約は多重集合の情報を保持しやすい", "epsは固定または学習可能", "WLテストとの関係で表現力が説明される"]
   },
   "GVAE": {
-    formula: "q(Z|X,A), p(A|Z) = sigmoid(ZZ^T), L = recon + KL",
+    formula: "\\displaystyle q_\\phi(Z|X,A),\\quad p_\\theta(A|Z)=\\sigma(ZZ^\\top),\\quad \\mathcal{L}=\\mathcal{L}_{recon}+D_{KL}",
     detail: "GVAEはGraph AutoEncoderにVAEの確率的潜在変数を加えたモデルです。GCNなどのエンコーダでmuとlog_varを出し、潜在表現Zからリンク確率や隣接行列を再構成します。",
     code: `mu = gcn_mu(A, X)
 log_var = gcn_logvar(A, X)
@@ -820,9 +820,46 @@ function slugifyTerm(title) {
   return encodeURIComponent(title.replace(/\s+/g, "-").toLowerCase());
 }
 
+function getFormulaForConcept(concept) {
+  const formulas = {
+    "偏微分と勾配": "\\displaystyle \\nabla_w L=\\left[\\frac{\\partial L}{\\partial w_1},\\ldots,\\frac{\\partial L}{\\partial w_n}\\right]",
+    "連鎖律": "\\displaystyle \\frac{\\partial z}{\\partial x}=\\frac{\\partial z}{\\partial y}\\frac{\\partial y}{\\partial x}",
+    "エントロピー": "\\displaystyle H(p)=-\\sum_x p(x)\\log p(x)",
+    "KLダイバージェンス": "\\displaystyle D_{KL}(p\\|q)=\\sum_x p(x)\\log\\frac{p(x)}{q(x)}",
+    "最尤推定": "\\displaystyle \\hat{\\theta}=\\arg\\max_\\theta \\prod_{i=1}^N p(x_i|\\theta)",
+    "Batch Gradient Descent": "\\displaystyle \\theta_{t+1}=\\theta_t-\\eta\\nabla_\\theta L(\\theta;X)",
+    "Stochastic Gradient Descent": "\\displaystyle \\theta_{t+1}=\\theta_t-\\eta\\nabla_\\theta L(\\theta;x_i,y_i)",
+    "Momentum": "\\displaystyle v_t=\\mu v_{t-1}-\\eta g_t,\\quad \\theta_{t+1}=\\theta_t+v_t",
+    "Nesterov Momentum": "\\displaystyle g_t=\\nabla L(\\theta_t+\\mu v_{t-1}),\\quad v_t=\\mu v_{t-1}-\\eta g_t",
+    "AdaGrad": "\\displaystyle \\theta_{t+1}=\\theta_t-\\frac{\\eta}{\\sqrt{G_t}+\\epsilon}g_t",
+    "RMSProp": "\\displaystyle E[g^2]_t=\\rho E[g^2]_{t-1}+(1-\\rho)g_t^2",
+    "L1正則化": "\\displaystyle L'=L+\\lambda\\sum_i |w_i|",
+    "L2正則化": "\\displaystyle L'=L+\\lambda\\sum_i w_i^2",
+    "Weight Decay": "\\displaystyle w_{t+1}=w_t-\\eta\\nabla L(w_t)-\\eta\\lambda w_t",
+    "Instance Normalization": "\\displaystyle y_{nchw}=\\gamma_c\\frac{x_{nchw}-\\mu_{nc}}{\\sqrt{\\sigma_{nc}^2+\\epsilon}}+\\beta_c",
+    "Group Normalization": "\\displaystyle y=\\gamma\\frac{x-\\mu_{group}}{\\sqrt{\\sigma_{group}^2+\\epsilon}}+\\beta",
+    "Dropout": "\\displaystyle \\tilde{h}=\\frac{m\\odot h}{1-p},\\quad m_i\\sim\\mathrm{Bernoulli}(1-p)",
+    "Spatial Dropout": "\\displaystyle \\tilde{X}_{nchw}=\\frac{M_{nc}\\,X_{nchw}}{1-p}",
+    "Depthwise Separable Convolution": "\\displaystyle k^2C_{in}+C_{in}C_{out}\\ll k^2C_{in}C_{out}",
+    "Residual Connection": "\\displaystyle y=F(x)+x",
+    "RNN": "\\displaystyle h_t=\\tanh(W_xx_t+W_hh_{t-1}+b)",
+    "LSTM": "\\displaystyle c_t=f_t\\odot c_{t-1}+i_t\\odot \\tilde{c}_t,\\quad h_t=o_t\\odot\\tanh(c_t)",
+    "GRU": "\\displaystyle h_t=(1-z_t)\\odot h_{t-1}+z_t\\odot\\tilde{h}_t",
+    "Multi-Head Attention": "\\displaystyle \\mathrm{MHA}(Q,K,V)=\\mathrm{Concat}(head_1,\\ldots,head_h)W^O",
+    "Positional Encoding": "\\displaystyle PE_{pos,2i}=\\sin\\left(\\frac{pos}{10000^{2i/d}}\\right),\\quad PE_{pos,2i+1}=\\cos\\left(\\frac{pos}{10000^{2i/d}}\\right)",
+    "Pre-LN Transformer": "\\displaystyle x'=x+\\mathrm{Sublayer}(\\mathrm{LayerNorm}(x))",
+    "AutoEncoder": "\\displaystyle z=f_\\phi(x),\\quad \\hat{x}=g_\\theta(z),\\quad L=\\|x-\\hat{x}\\|^2",
+    "GAN": "\\displaystyle \\min_G\\max_D\\mathbb{E}_{x\\sim p_{data}}[\\log D(x)]+\\mathbb{E}_{z\\sim p_z}[\\log(1-D(G(z)))]",
+    "Precision / Recall / F1": "\\displaystyle Precision=\\frac{TP}{TP+FP},\\quad Recall=\\frac{TP}{TP+FN},\\quad F1=\\frac{2PR}{P+R}",
+    "ROC-AUC": "\\displaystyle TPR=\\frac{TP}{TP+FN},\\quad FPR=\\frac{FP}{FP+TN}"
+  };
+
+  return formulas[concept.title] || "\\displaystyle y=f_\\theta(x),\\quad L=L(y,\\hat{y}),\\quad \\theta\\leftarrow\\theta-\\eta\\nabla_\\theta L";
+}
+
 function getTermDetail(concept) {
   return termDetails[concept.title] || {
-    formula: concept.code,
+    formula: getFormulaForConcept(concept),
     detail: `${concept.body} E資格では、用語の定義だけでなく、どの軸で計算するか、学習時と推論時で挙動が変わるか、勾配がどこへ流れるかまで結び付けて理解することが重要です。`,
     code: concept.code,
     points: ["定義と目的を説明できるようにする", "NumPyコードと数式の対応を見る", "学習時・推論時・評価時の違いを確認する"]
@@ -921,7 +958,7 @@ function renderTermDetailFromHash() {
     <div class="detail-grid">
       <section class="detail-block">
         <h3>数式・考え方</h3>
-        <pre><code>${escapeHtml(detail.formula)}</code></pre>
+        <div class="math-formula">${escapeHtml(detail.formula)}</div>
       </section>
       <section class="detail-block">
         <h3>Python実装例</h3>

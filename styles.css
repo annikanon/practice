@@ -332,6 +332,19 @@ button {
   line-height: 1.8;
 }
 
+.math-formula {
+  overflow-x: auto;
+  padding: 18px;
+  color: #172026;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-family: "Cambria Math", "Times New Roman", serif;
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
 .tag {
   display: inline-flex;
   width: fit-content;
