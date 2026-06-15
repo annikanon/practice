@@ -14,20 +14,21 @@
     </div>
     <nav aria-label="メインメニュー">
       <a href="#roadmap">Roadmap</a>
+      <a href="#concepts">Terms</a>
+      <a href="#quiz">Exam</a>
       <a href="#lab">Lab</a>
-      <a href="#quiz">Quiz</a>
     </nav>
   </header>
 
   <main>
     <section class="hero" aria-labelledby="hero-title">
       <div class="hero-copy">
-        <p class="eyebrow">はじめての人にも、復習したい人にも</p>
-        <h2 id="hero-title">数式だけで止まらない、手を動かす AI 学習アプリ。</h2>
-        <p>ロードマップで順番をつかみ、ミニ実験でモデルのふるまいを観察し、クイズで理解を確認できます。</p>
+        <p class="eyebrow">E資格対策レベルへ</p>
+        <h2 id="hero-title">理論、実装、穴埋め問題で深層学習を鍛える。</h2>
+        <p>重要用語の解説、Pythonサンプル、E資格を意識した選択問題とコード穴埋めをまとめて学べます。</p>
         <div class="hero-actions">
-          <a class="button primary" href="#roadmap">学習を始める</a>
-          <a class="button secondary" href="#lab">実験する</a>
+          <a class="button primary" href="#quiz">問題を解く</a>
+          <a class="button secondary" href="#concepts">用語を確認</a>
         </div>
       </div>
       <div class="network-visual" aria-label="ニューラルネットワークのイメージ">
@@ -48,17 +49,39 @@
     <section class="section" id="roadmap" aria-labelledby="roadmap-title">
       <div class="section-heading">
         <p class="eyebrow">Roadmap</p>
-        <h2 id="roadmap-title">学習ステップ</h2>
+        <h2 id="roadmap-title">E資格対策ロードマップ</h2>
       </div>
       <div class="roadmap" id="roadmapList"></div>
     </section>
 
-    <section class="section split" id="concepts" aria-labelledby="concepts-title">
+    <section class="section" id="concepts" aria-labelledby="concepts-title">
       <div class="section-heading">
-        <p class="eyebrow">Concepts</p>
-        <h2 id="concepts-title">押さえる概念</h2>
+        <p class="eyebrow">Terms and Code</p>
+        <h2 id="concepts-title">重要用語とPythonサンプル</h2>
       </div>
       <div class="concept-grid" id="conceptGrid"></div>
+    </section>
+
+    <section class="section quiz-section" id="quiz" aria-labelledby="quiz-title">
+      <div class="section-heading">
+        <p class="eyebrow">Exam Practice</p>
+        <h2 id="quiz-title">E資格対策問題</h2>
+      </div>
+      <div class="quiz">
+        <div class="quiz-meta">
+          <span id="questionCounter"></span>
+          <span id="questionType"></span>
+        </div>
+        <p id="questionText"></p>
+        <pre id="codePrompt" class="code-prompt"></pre>
+        <div id="answerList" class="answers"></div>
+        <div id="fillAnswer" class="fill-answer"></div>
+        <div id="quizResult" class="quiz-result" aria-live="polite"></div>
+        <div class="quiz-actions">
+          <button id="prevQuestion" type="button">前へ</button>
+          <button id="nextQuestion" type="button">次へ</button>
+        </div>
+      </div>
     </section>
 
     <section class="section lab-section" id="lab" aria-labelledby="lab-title">
@@ -84,18 +107,6 @@
           <canvas id="lossChart" width="760" height="360" aria-label="損失の推移グラフ"></canvas>
           <p id="labInsight" class="insight"></p>
         </div>
-      </div>
-    </section>
-
-    <section class="section quiz-section" id="quiz" aria-labelledby="quiz-title">
-      <div class="section-heading">
-        <p class="eyebrow">Quiz</p>
-        <h2 id="quiz-title">理解度チェック</h2>
-      </div>
-      <div class="quiz">
-        <p id="questionText"></p>
-        <div id="answerList" class="answers"></div>
-        <p id="quizResult" class="quiz-result" aria-live="polite"></p>
       </div>
     </section>
   </main>
