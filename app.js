@@ -912,7 +912,610 @@ function getAnswerGuide(concept) {
   ];
 }
 
+const termStudyPoints = {
+  "偏微分と勾配": ["どの変数で微分しているかを明確にする", "勾配は損失が増える方向なので更新は逆向き", "ベクトル化した実装ではshapeを確認する"],
+  "連鎖律": ["合成関数の局所微分を掛け合わせる", "誤差逆伝播の中心原理として説明する", "計算グラフ上で上流勾配と局所勾配を分ける"],
+  "エントロピー": ["不確実性の大きさを表す", "確率が偏るほど小さく一様に近いほど大きい", "交差エントロピーとの違いを説明する"],
+  "KLダイバージェンス": ["非対称で距離関数ではない", "2つの分布のずれを測る", "VAEや知識蒸留でどの分布を近づけるかを確認する"],
+  "最尤推定": ["尤度最大化と負の対数尤度最小化を対応させる", "独立同分布なら尤度は積になる", "分類の交差エントロピーと結び付ける"],
+  "Batch Gradient Descent": ["全データで1回の勾配を計算する", "更新は安定しやすいが計算が重い", "学習率が大きい場合と小さい場合を説明する"],
+  "Stochastic Gradient Descent": ["ミニバッチで勾配を近似する", "勾配ノイズがあるため更新が揺れる", "バッチサイズと汎化性能の関係を意識する"],
+  "Momentum": ["速度ベクトルに過去の勾配を蓄積する", "谷方向の振動を抑えやすい", "更新式の符号を間違えない"],
+  "Nesterov Momentum": ["先回りした位置で勾配を見る", "通常のMomentumより早めに減速できる", "lookahead位置の意味を説明する"],
+  "AdaGrad": ["二乗勾配の累積で学習率を調整する", "頻出特徴の更新が小さくなる", "後半に学習率が小さくなりすぎる弱点を説明する"],
+  "RMSProp": ["二乗勾配の指数移動平均を使う", "AdaGradの単調減少問題を緩和する", "rhoが移動平均の滑らかさを決める"],
+  "Adam": ["一次モーメントと二次モーメントを使う", "初期ステップではバイアス補正が必要", "AdamWとのWeight Decayの違いを説明する"],
+  "L1正則化": ["重みの絶対値和に罰則を与える", "スパースな重みになりやすい", "0付近で微分不能な点を意識する"],
+  "L2正則化": ["重みの二乗和に罰則を与える", "大きな重みを滑らかに抑える", "Weight Decayとの関係を説明する"],
+  "Weight Decay": ["更新時に重みを直接縮小する", "AdamWでは勾配更新と分離する", "L2正則化と完全に同じでない場合を説明する"],
+  "Batch Normalization": ["バッチ方向の平均分散で正規化する", "学習時と推論時で統計量が異なる", "gammaとbetaで表現力を戻す"],
+  "Layer Normalization": ["特徴次元で正規化する", "バッチサイズに依存しにくい", "Transformerでよく使われる理由を説明する"],
+  "Instance Normalization": ["サンプル・チャネルごとに空間方向を正規化する", "スタイル情報の扱いと関係が深い", "BatchNormとの軸の違いを説明する"],
+  "Group Normalization": ["チャネルをグループに分けて正規化する", "小バッチでも使いやすい", "LayerNormとInstanceNormの中間的性質を理解する"],
+  "Dropout": ["学習時だけユニットを確率的に落とす", "inverted dropoutのスケール補正を説明する", "推論時にDropoutを無効化する理由を理解する"],
+  "Spatial Dropout": ["特徴マップ単位でDropoutする", "CNNの空間相関を考慮する", "通常Dropoutとのmask shapeの違いを確認する"],
+  "畳み込み": ["出力サイズ計算を確実にする", "重み共有と局所受容野を説明する", "フィルタ数と出力チャネル数の関係を見る"],
+  "Depthwise Separable Convolution": ["DepthwiseとPointwiseを分けて説明する", "通常畳み込みとのパラメータ数を比較する", "MobileNetで使われる理由を理解する"],
+  "Residual Connection": ["恒等写像の経路で勾配を通しやすくする", "入力と出力のshapeを合わせる必要がある", "深いネットワークの劣化問題と結び付ける"],
+  "RNN": ["隠れ状態を時刻方向に受け渡す", "BPTTで勾配消失・爆発が起きやすい", "系列長が計算量に効く"],
+  "LSTM": ["入力・忘却・出力ゲートを説明する", "セル状態が長期記憶を担う", "忘却ゲートの役割を式で説明する"],
+  "GRU": ["更新ゲートとリセットゲートを説明する", "LSTMより構造が簡潔", "候補状態と過去状態の混ぜ方を見る"],
+  "Scaled Dot-Product Attention": ["QK^Tで参照スコアを作る", "sqrt(d_k)でsoftmax飽和を抑える", "softmaxの軸を確認する"],
+  "Multi-Head Attention": ["複数ヘッドで異なる関係を捉える", "headをconcatして出力射影する", "ヘッド数とd_modelの関係を確認する"],
+  "Positional Encoding": ["Self-Attention単体には順序情報がない", "sin/cosで位置を連続的に表す", "学習型位置埋め込みとの違いを説明する"],
+  "Pre-LN Transformer": ["LayerNormをサブレイヤー前に置く", "深いTransformerで勾配が安定しやすい", "Post-LNとの違いを説明する"],
+  "AutoEncoder": ["再構成誤差を最小化する", "潜在表現の次元と情報圧縮を意識する", "異常検知での使い方を説明する"],
+  "Variational AutoEncoder": ["再構成項とKL項を分ける", "再パラメータ化トリックを説明する", "潜在空間を確率分布として扱う"],
+  "GAN": ["生成器と識別器のミニマックスを説明する", "モード崩壊を理解する", "識別器が強すぎる場合の問題を説明する"],
+  "Graph Neural Network": ["ノード特徴と隣接構造を同時に使う", "何ホップ先まで情報が届くかを見る", "over-smoothingに注意する"],
+  "Message Passing": ["メッセージ・集約・更新に分ける", "集約はノード順序に依存しない", "エッジ特徴を含める拡張を理解する"],
+  "GCN": ["自己ループを加える理由を説明する", "対称正規化の意味を理解する", "近傍を一様に集約する限界を見る"],
+  "GAT": ["Attention係数をエッジごとに学習する", "GCNとの重み付けの違いを説明する", "Multi-head GATの目的を理解する"],
+  "GIN": ["sum集約とMLPで表現力を高める", "WLテストとの関係を説明する", "epsの役割を理解する"],
+  "GVAE": ["潜在変数から隣接行列を再構成する", "内積デコーダの意味を説明する", "再構成項とKL項を分けて理解する"],
+  "Precision / Recall / F1": ["TP/FP/FNから式を説明する", "不均衡データでAccuracyだけを見ない", "Precision重視かRecall重視かをタスクで判断する"],
+  "ROC-AUC": ["閾値を動かしたTPR/FPRを見る", "ランキング性能として解釈する", "PR-AUCとの使い分けを意識する"]
+};
+
+const numpySamples = {
+  "偏微分と勾配": `import numpy as np
+
+class LinearRegressionGrad:
+    def __init__(self, features):
+        self.w = np.zeros((features, 1))
+        self.b = 0.0
+
+    def predict(self, X):
+        return X @ self.w + self.b
+
+    def gradients(self, X, y):
+        pred = self.predict(X)
+        error = pred - y
+        grad_w = X.T @ error / len(X)
+        grad_b = error.mean()
+        return grad_w, grad_b`,
+  "連鎖律": `import numpy as np
+
+class ChainRuleExample:
+    def forward(self, x):
+        self.x = x
+        self.y = x ** 2
+        self.z = 3 * self.y
+        return self.z
+
+    def backward(self, dz):
+        dz_dy = 3
+        dy_dx = 2 * self.x
+        return dz * dz_dy * dy_dx`,
+  "エントロピー": `import numpy as np
+
+class Entropy:
+    def __call__(self, p):
+        p = np.asarray(p, dtype=float)
+        p = p / p.sum()
+        return -np.sum(p * np.log(p + 1e-7))`,
+  "KLダイバージェンス": `import numpy as np
+
+class KLDivergence:
+    def __call__(self, p, q):
+        p = np.asarray(p, dtype=float) / np.sum(p)
+        q = np.asarray(q, dtype=float) / np.sum(q)
+        return np.sum(p * (np.log(p + 1e-7) - np.log(q + 1e-7)))`,
+  "最尤推定": `import numpy as np
+
+class BernoulliMLE:
+    def fit(self, x):
+        self.p = np.mean(x)
+        return self.p
+
+    def negative_log_likelihood(self, x):
+        return -np.sum(x * np.log(self.p + 1e-7) + (1 - x) * np.log(1 - self.p + 1e-7))`,
+  "Batch Gradient Descent": `import numpy as np
+
+class BatchGradientDescent:
+    def __init__(self, features, lr=0.01):
+        self.w = np.zeros((features, 1))
+        self.lr = lr
+
+    def step(self, X, y):
+        pred = X @ self.w
+        grad = X.T @ (pred - y) / len(X)
+        self.w -= self.lr * grad
+        return np.mean((pred - y) ** 2)`,
+  "Stochastic Gradient Descent": `import numpy as np
+
+class MiniBatchSGD:
+    def __init__(self, features, lr=0.01):
+        self.w = np.zeros((features, 1))
+        self.lr = lr
+
+    def step(self, X_batch, y_batch):
+        pred = X_batch @ self.w
+        grad = X_batch.T @ (pred - y_batch) / len(X_batch)
+        self.w -= self.lr * grad`,
+  "Momentum": `import numpy as np
+
+class MomentumOptimizer:
+    def __init__(self, param, lr=0.01, momentum=0.9):
+        self.param = param
+        self.velocity = np.zeros_like(param)
+        self.lr = lr
+        self.momentum = momentum
+
+    def step(self, grad):
+        self.velocity = self.momentum * self.velocity - self.lr * grad
+        self.param += self.velocity`,
+  "Nesterov Momentum": `import numpy as np
+
+class NesterovMomentum:
+    def __init__(self, param, lr=0.01, momentum=0.9):
+        self.param = param
+        self.velocity = np.zeros_like(param)
+        self.lr = lr
+        self.momentum = momentum
+
+    def lookahead(self):
+        return self.param + self.momentum * self.velocity
+
+    def step(self, grad_at_lookahead):
+        self.velocity = self.momentum * self.velocity - self.lr * grad_at_lookahead
+        self.param += self.velocity`,
+  "AdaGrad": `import numpy as np
+
+class AdaGrad:
+    def __init__(self, param, lr=0.1, eps=1e-7):
+        self.param = param
+        self.h = np.zeros_like(param)
+        self.lr = lr
+        self.eps = eps
+
+    def step(self, grad):
+        self.h += grad ** 2
+        self.param -= self.lr * grad / (np.sqrt(self.h) + self.eps)`,
+  "RMSProp": `import numpy as np
+
+class RMSProp:
+    def __init__(self, param, lr=0.001, rho=0.9, eps=1e-8):
+        self.param = param
+        self.h = np.zeros_like(param)
+        self.lr = lr
+        self.rho = rho
+        self.eps = eps
+
+    def step(self, grad):
+        self.h = self.rho * self.h + (1 - self.rho) * grad ** 2
+        self.param -= self.lr * grad / (np.sqrt(self.h) + self.eps)`,
+  "L1正則化": `import numpy as np
+
+class L1Penalty:
+    def __init__(self, lambda_=0.01):
+        self.lambda_ = lambda_
+
+    def loss(self, data_loss, w):
+        return data_loss + self.lambda_ * np.sum(np.abs(w))
+
+    def grad(self, w):
+        return self.lambda_ * np.sign(w)`,
+  "L2正則化": `import numpy as np
+
+class L2Penalty:
+    def __init__(self, lambda_=0.01):
+        self.lambda_ = lambda_
+
+    def loss(self, data_loss, w):
+        return data_loss + self.lambda_ * np.sum(w ** 2)
+
+    def grad(self, w):
+        return 2 * self.lambda_ * w`,
+  "Weight Decay": `import numpy as np
+
+class DecoupledWeightDecay:
+    def __init__(self, param, lr=0.001, weight_decay=0.01):
+        self.param = param
+        self.lr = lr
+        self.weight_decay = weight_decay
+
+    def step(self, grad):
+        self.param -= self.lr * grad
+        self.param -= self.lr * self.weight_decay * self.param`,
+  "Layer Normalization": `import numpy as np
+
+class LayerNorm:
+    def __init__(self, features, eps=1e-5):
+        self.gamma = np.ones(features)
+        self.beta = np.zeros(features)
+        self.eps = eps
+
+    def forward(self, x):
+        mean = x.mean(axis=-1, keepdims=True)
+        var = x.var(axis=-1, keepdims=True)
+        return self.gamma * (x - mean) / np.sqrt(var + self.eps) + self.beta`,
+  "Instance Normalization": `import numpy as np
+
+class InstanceNorm2D:
+    def __init__(self, channels, eps=1e-5):
+        self.gamma = np.ones((1, channels, 1, 1))
+        self.beta = np.zeros((1, channels, 1, 1))
+        self.eps = eps
+
+    def forward(self, x):
+        mean = x.mean(axis=(2, 3), keepdims=True)
+        var = x.var(axis=(2, 3), keepdims=True)
+        return self.gamma * (x - mean) / np.sqrt(var + self.eps) + self.beta`,
+  "Group Normalization": `import numpy as np
+
+class GroupNorm:
+    def __init__(self, groups, channels, eps=1e-5):
+        self.groups = groups
+        self.eps = eps
+        self.gamma = np.ones((1, channels, 1, 1))
+        self.beta = np.zeros((1, channels, 1, 1))
+
+    def forward(self, x):
+        n, c, h, w = x.shape
+        xg = x.reshape(n, self.groups, c // self.groups, h, w)
+        mean = xg.mean(axis=(2, 3, 4), keepdims=True)
+        var = xg.var(axis=(2, 3, 4), keepdims=True)
+        return (self.gamma * ((xg - mean) / np.sqrt(var + self.eps)).reshape(n, c, h, w) + self.beta)`,
+  "Dropout": `import numpy as np
+
+class Dropout:
+    def __init__(self, p=0.5):
+        self.p = p
+
+    def forward(self, x, training=True):
+        if not training:
+            return x
+        mask = (np.random.rand(*x.shape) > self.p) / (1 - self.p)
+        return x * mask`,
+  "Spatial Dropout": `import numpy as np
+
+class SpatialDropout2D:
+    def __init__(self, p=0.2):
+        self.p = p
+
+    def forward(self, x, training=True):
+        if not training:
+            return x
+        n, c, _, _ = x.shape
+        mask = (np.random.rand(n, c, 1, 1) > self.p) / (1 - self.p)
+        return x * mask`,
+  "Depthwise Separable Convolution": `import numpy as np
+
+class DepthwiseSeparableInfo:
+    def params(self, k, in_c, out_c):
+        depthwise = k * k * in_c
+        pointwise = in_c * out_c
+        normal = k * k * in_c * out_c
+        return {"normal": normal, "separable": depthwise + pointwise}`,
+  "Residual Connection": `import numpy as np
+
+class ResidualBlock:
+    def __init__(self, features):
+        self.W = np.random.randn(features, features) * np.sqrt(2 / features)
+
+    def forward(self, x):
+        residual = x
+        out = np.maximum(0, x @ self.W)
+        return out + residual`,
+  "RNN": `import numpy as np
+
+class SimpleRNNCell:
+    def __init__(self, input_dim, hidden_dim):
+        self.Wx = np.random.randn(input_dim, hidden_dim) * 0.1
+        self.Wh = np.random.randn(hidden_dim, hidden_dim) * 0.1
+        self.b = np.zeros(hidden_dim)
+
+    def forward(self, x_t, h_prev):
+        return np.tanh(x_t @ self.Wx + h_prev @ self.Wh + self.b)`,
+  "LSTM": `import numpy as np
+
+class LSTMStateUpdate:
+    def forward(self, f_t, i_t, g_t, o_t, c_prev):
+        c_t = f_t * c_prev + i_t * g_t
+        h_t = o_t * np.tanh(c_t)
+        return h_t, c_t`,
+  "GRU": `import numpy as np
+
+class GRUStateUpdate:
+    def forward(self, z_t, r_t, h_prev, candidate):
+        h_t = (1 - z_t) * h_prev + z_t * candidate
+        return h_t`,
+  "Multi-Head Attention": `import numpy as np
+
+class MultiHeadShape:
+    def split_heads(self, x, heads):
+        batch, length, d_model = x.shape
+        d_head = d_model // heads
+        return x.reshape(batch, length, heads, d_head).transpose(0, 2, 1, 3)`,
+  "Positional Encoding": `import numpy as np
+
+class SinusoidalPositionEncoding:
+    def build(self, length, d_model):
+        pos = np.arange(length)[:, None]
+        i = np.arange(d_model)[None, :]
+        angle = pos / np.power(10000, (2 * (i // 2)) / d_model)
+        pe = np.zeros((length, d_model))
+        pe[:, 0::2] = np.sin(angle[:, 0::2])
+        pe[:, 1::2] = np.cos(angle[:, 1::2])
+        return pe`,
+  "Pre-LN Transformer": `import numpy as np
+
+class PreLNBlock:
+    def __init__(self, norm, attention, mlp):
+        self.norm = norm
+        self.attention = attention
+        self.mlp = mlp
+
+    def forward(self, x):
+        x = x + self.attention(self.norm(x))
+        x = x + self.mlp(self.norm(x))
+        return x`,
+  "Scaled Dot-Product Attention": `import numpy as np
+
+class ScaledDotProductAttention:
+    def softmax(self, x):
+        x = x - x.max(axis=-1, keepdims=True)
+        exp_x = np.exp(x)
+        return exp_x / exp_x.sum(axis=-1, keepdims=True)
+
+    def forward(self, Q, K, V, mask=None):
+        d_k = Q.shape[-1]
+        scores = Q @ K.transpose(0, 2, 1) / np.sqrt(d_k)
+        if mask is not None:
+            scores = np.where(mask == 0, -1e9, scores)
+        weights = self.softmax(scores)
+        return weights @ V, weights`,
+  "AutoEncoder": `import numpy as np
+
+class LinearAutoEncoder:
+    def __init__(self, input_dim, latent_dim):
+        self.We = np.random.randn(input_dim, latent_dim) * 0.1
+        self.Wd = np.random.randn(latent_dim, input_dim) * 0.1
+
+    def forward(self, x):
+        z = x @ self.We
+        x_hat = z @ self.Wd
+        loss = np.mean((x - x_hat) ** 2)
+        return x_hat, z, loss`,
+  "Variational AutoEncoder": `import numpy as np
+
+class VariationalAutoEncoderMath:
+    def reparameterize(self, mu, log_var):
+        eps = np.random.randn(*mu.shape)
+        return mu + np.exp(0.5 * log_var) * eps
+
+    def kl_loss(self, mu, log_var):
+        return -0.5 * np.sum(1 + log_var - mu**2 - np.exp(log_var))
+
+    def total_loss(self, x, x_hat, mu, log_var):
+        recon = np.mean((x - x_hat) ** 2)
+        return recon + self.kl_loss(mu, log_var)`,
+  "GAN": `import numpy as np
+
+class GanLoss:
+    def discriminator_loss(self, d_real, d_fake):
+        real_loss = -np.mean(np.log(d_real + 1e-7))
+        fake_loss = -np.mean(np.log(1 - d_fake + 1e-7))
+        return real_loss + fake_loss
+
+    def generator_loss(self, d_fake):
+        return -np.mean(np.log(d_fake + 1e-7))`,
+  "Precision / Recall / F1": `class ClassificationMetrics:
+    def compute(self, tp, fp, fn):
+        precision = tp / (tp + fp + 1e-7)
+        recall = tp / (tp + fn + 1e-7)
+        f1 = 2 * precision * recall / (precision + recall + 1e-7)
+        return precision, recall, f1`,
+  "ROC-AUC": `import numpy as np
+
+class RocPoints:
+    def point(self, tp, fp, tn, fn):
+        tpr = tp / (tp + fn + 1e-7)
+        fpr = fp / (fp + tn + 1e-7)
+        return fpr, tpr`
+};
+
+const torchSamples = {
+  "偏微分と勾配": `import torch
+
+w = torch.zeros(3, 1, requires_grad=True)
+X = torch.randn(8, 3)
+y = torch.randn(8, 1)
+loss = torch.mean((X @ w - y) ** 2)
+loss.backward()
+grad_w = w.grad`,
+  "連鎖律": `import torch
+
+x = torch.tensor(2.0, requires_grad=True)
+y = x ** 2
+z = 3 * y
+z.backward()
+print(x.grad)`,
+  "エントロピー": `import torch
+
+p = torch.tensor([0.7, 0.2, 0.1])
+entropy = -(p * torch.log(p + 1e-7)).sum()`,
+  "KLダイバージェンス": `import torch
+
+p = torch.tensor([0.7, 0.2, 0.1])
+q = torch.tensor([0.5, 0.3, 0.2])
+kl = (p * (torch.log(p + 1e-7) - torch.log(q + 1e-7))).sum()`,
+  "最尤推定": `import torch
+
+logits = torch.randn(16, 3)
+target = torch.randint(0, 3, (16,))
+nll = torch.nn.functional.cross_entropy(logits, target)`,
+  "Batch Gradient Descent": `import torch
+
+model = torch.nn.Linear(4, 1)
+optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+X = torch.randn(32, 4)
+y = torch.randn(32, 1)
+loss = torch.mean((model(X) - y) ** 2)
+loss.backward()
+optimizer.step()`,
+  "Stochastic Gradient Descent": `import torch
+
+model = torch.nn.Linear(4, 1)
+optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+for xb, yb in [(torch.randn(8, 4), torch.randn(8, 1))]:
+    loss = torch.mean((model(xb) - yb) ** 2)
+    loss.backward()
+    optimizer.step()
+    optimizer.zero_grad()`,
+  "Momentum": `import torch
+
+model = torch.nn.Linear(4, 1)
+optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)`,
+  "Nesterov Momentum": `import torch
+
+model = torch.nn.Linear(4, 1)
+optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, nesterov=True)`,
+  "AdaGrad": `import torch
+
+model = torch.nn.Linear(4, 1)
+optimizer = torch.optim.Adagrad(model.parameters(), lr=0.1)`,
+  "RMSProp": `import torch
+
+model = torch.nn.Linear(4, 1)
+optimizer = torch.optim.RMSprop(model.parameters(), lr=0.001, alpha=0.9)`,
+  "L1正則化": `import torch
+
+model = torch.nn.Linear(4, 1)
+data_loss = torch.tensor(0.0)
+l1 = sum(p.abs().sum() for p in model.parameters())
+loss = data_loss + 0.01 * l1`,
+  "L2正則化": `import torch
+
+model = torch.nn.Linear(4, 1)
+optimizer = torch.optim.SGD(model.parameters(), lr=0.01, weight_decay=0.01)`,
+  "Weight Decay": `import torch
+
+model = torch.nn.Linear(4, 1)
+optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=0.01)`,
+  "Layer Normalization": `import torch.nn as nn
+
+layer = nn.LayerNorm(normalized_shape=128)`,
+  "Instance Normalization": `import torch.nn as nn
+
+layer = nn.InstanceNorm2d(num_features=32, affine=True)`,
+  "Group Normalization": `import torch.nn as nn
+
+layer = nn.GroupNorm(num_groups=8, num_channels=32)`,
+  "Dropout": `import torch.nn as nn
+
+layer = nn.Dropout(p=0.5)`,
+  "Spatial Dropout": `import torch.nn as nn
+
+layer = nn.Dropout2d(p=0.2)`,
+  "Depthwise Separable Convolution": `import torch.nn as nn
+
+class DepthwiseSeparableConv(nn.Module):
+    def __init__(self, in_c, out_c):
+        super().__init__()
+        self.depthwise = nn.Conv2d(in_c, in_c, 3, padding=1, groups=in_c)
+        self.pointwise = nn.Conv2d(in_c, out_c, 1)
+
+    def forward(self, x):
+        return self.pointwise(self.depthwise(x))`,
+  "Residual Connection": `import torch.nn as nn
+
+class ResidualBlock(nn.Module):
+    def __init__(self, block):
+        super().__init__()
+        self.block = block
+
+    def forward(self, x):
+        return self.block(x) + x`,
+  "RNN": `import torch.nn as nn
+
+rnn = nn.RNN(input_size=16, hidden_size=32, batch_first=True)`,
+  "LSTM": `import torch.nn as nn
+
+lstm = nn.LSTM(input_size=16, hidden_size=32, batch_first=True)`,
+  "GRU": `import torch.nn as nn
+
+gru = nn.GRU(input_size=16, hidden_size=32, batch_first=True)`,
+  "Multi-Head Attention": `import torch.nn as nn
+
+mha = nn.MultiheadAttention(embed_dim=128, num_heads=8, batch_first=True)`,
+  "Positional Encoding": `import torch
+
+position = torch.arange(0, 128).unsqueeze(1)
+div_term = torch.exp(torch.arange(0, 64, 2) * (-torch.log(torch.tensor(10000.0)) / 64))`,
+  "Pre-LN Transformer": `import torch.nn as nn
+
+class PreLNBlock(nn.Module):
+    def __init__(self, dim, sublayer):
+        super().__init__()
+        self.norm = nn.LayerNorm(dim)
+        self.sublayer = sublayer
+
+    def forward(self, x):
+        return x + self.sublayer(self.norm(x))`,
+  "Scaled Dot-Product Attention": `import torch
+import torch.nn.functional as F
+
+class TorchScaledAttention:
+    def __call__(self, Q, K, V, mask=None):
+        d_k = Q.size(-1)
+        scores = Q @ K.transpose(-2, -1) / (d_k ** 0.5)
+        if mask is not None:
+            scores = scores.masked_fill(mask == 0, -1e9)
+        weights = F.softmax(scores, dim=-1)
+        return weights @ V`,
+  "AutoEncoder": `import torch.nn as nn
+
+class AutoEncoder(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.encoder = nn.Linear(784, 32)
+        self.decoder = nn.Linear(32, 784)
+
+    def forward(self, x):
+        return self.decoder(self.encoder(x))`,
+  "Variational AutoEncoder": `import torch
+import torch.nn as nn
+
+class VaeHead(nn.Module):
+    def reparameterize(self, mu, log_var):
+        eps = torch.randn_like(mu)
+        return mu + torch.exp(0.5 * log_var) * eps
+
+    def kl_loss(self, mu, log_var):
+        return -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())`,
+  "GAN": `import torch
+import torch.nn.functional as F
+
+class GanLoss:
+    def discriminator_loss(self, d_real_logits, d_fake_logits):
+        real = F.binary_cross_entropy_with_logits(d_real_logits, torch.ones_like(d_real_logits))
+        fake = F.binary_cross_entropy_with_logits(d_fake_logits, torch.zeros_like(d_fake_logits))
+        return real + fake
+
+    def generator_loss(self, d_fake_logits):
+        return F.binary_cross_entropy_with_logits(d_fake_logits, torch.ones_like(d_fake_logits))`,
+  "Precision / Recall / F1": `import torch
+
+pred = torch.tensor([1, 0, 1, 1])
+target = torch.tensor([1, 0, 0, 1])
+tp = ((pred == 1) & (target == 1)).sum()
+fp = ((pred == 1) & (target == 0)).sum()
+fn = ((pred == 0) & (target == 1)).sum()`,
+  "ROC-AUC": `import torch
+
+scores = torch.tensor([0.9, 0.7, 0.4, 0.1])
+target = torch.tensor([1, 0, 1, 0])
+threshold = 0.5
+pred = (scores >= threshold).long()`
+};
+
 function getNumpySample(concept) {
+  if (numpySamples[concept.title]) {
+    return numpySamples[concept.title];
+  }
+
   if (concept.title === "Batch Normalization") {
     return `import numpy as np
 
@@ -1092,35 +1695,21 @@ norm = NormalizationLayer(features=8)
 y = norm.layer_norm(x)`;
   }
 
-  return `import numpy as np
+  return `# ${concept.title} のNumPy確認用コード
+import numpy as np
 
-class StudyModule:
-    def __init__(self, in_features, out_features):
-        scale = np.sqrt(2 / max(1, in_features))
-        self.W = np.random.randn(in_features, out_features) * scale
-        self.b = np.zeros(out_features)
-
-    def forward(self, x):
-        z = x @ self.W + self.b
-        return np.maximum(0, z)
-
-    def mse_loss(self, pred, target):
-        diff = pred - target
-        return np.mean(diff ** 2)
-
-    def step(self, x, target, lr=0.01):
-        pred = self.forward(x)
-        loss = self.mse_loss(pred, target)
-        grad_out = 2 * (pred - target) / len(x)
-        grad_z = grad_out * (pred > 0)
-        grad_W = x.T @ grad_z
-        grad_b = grad_z.sum(axis=0)
-        self.W -= lr * grad_W
-        self.b -= lr * grad_b
-        return loss`;
+class ConceptExample:
+    def run(self):
+        # 用語カードで示した最小実装を、詳細ページでも確認できるようにしています。
+${concept.code.split("\n").map((line) => `        ${line}`).join("\n")}
+`;
 }
 
 function getTorchSample(concept) {
+  if (torchSamples[concept.title]) {
+    return torchSamples[concept.title];
+  }
+
   if (concept.title === "Batch Normalization") {
     return `import torch
 import torch.nn as nn
@@ -1206,24 +1795,14 @@ class TorchLayerNormBlock(nn.Module):
         return torch.relu(self.proj(x))`;
   }
 
-  return `import torch
-import torch.nn as nn
+  return `# ${concept.title} のPyTorch確認用コード
+import torch
 
-class TorchStudyModule(nn.Module):
-    def __init__(self, in_features, out_features):
-        super().__init__()
-        self.net = nn.Sequential(
-            nn.Linear(in_features, out_features),
-            nn.ReLU(),
-            nn.Linear(out_features, out_features)
-        )
-
-    def forward(self, x):
-        return self.net(x)
-
-model = TorchStudyModule(8, 4)
-x = torch.randn(16, 8)
-y = model(x)`;
+# この用語はPyTorchの特定レイヤーに一対一対応しない場合があります。
+# NumPy実装と数式を見ながら、テンソル演算として対応を確認してください。
+x = torch.tensor(0.0, requires_grad=True)
+y = x + 0
+y.backward()`;
 }
 
 function getTermDetail(concept) {
@@ -1231,11 +1810,12 @@ function getTermDetail(concept) {
     formula: getFormulaForConcept(concept),
     detail: getDetailedExplanation(concept),
     code: getNumpySample(concept),
-    points: ["定義と目的を説明できるようにする", "NumPyコードと数式の対応を見る", "学習時・推論時・評価時の違いを確認する"]
+    points: termStudyPoints[concept.title] || ["この用語固有の入力と出力を確認する", "数式の各記号と実装の変数を対応させる", "学習時と推論時で変化する処理があるか確認する"]
   };
 
   return {
     ...detail,
+    points: termStudyPoints[concept.title] || detail.points,
     numpyCode: detail.numpyCode || getNumpySample(concept),
     torchCode: detail.torchCode || getTorchSample(concept),
     answerGuide: detail.answerGuide || getAnswerGuide(concept)
