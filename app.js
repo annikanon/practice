@@ -857,12 +857,351 @@ function getFormulaForConcept(concept) {
   return formulas[concept.title] || "\\displaystyle y=f_\\theta(x),\\quad L=L(y,\\hat{y}),\\quad \\theta\\leftarrow\\theta-\\eta\\nabla_\\theta L";
 }
 
+function getDetailedExplanation(concept) {
+  const explanations = {
+    "数学": "数学系の用語は、式そのものを暗記するよりも、どの変数に対して微分しているか、確率分布のどちらを基準にしているか、損失関数として最小化すると何が起きるかを追うことが大切です。実装では、ベクトル化した計算のshapeが数式の添字と対応します。",
+    "最適化": "最適化手法は、勾配をそのまま使うのか、過去の勾配を蓄積するのか、二乗勾配で更新量を調整するのかが違いになります。E資格では更新式だけでなく、学習率が大きい場合、小さい場合、初期ステップのバイアス補正まで説明できると強いです。",
+    "正規化": "正規化層は、どの軸で平均・分散を計算するかが本質です。BatchNormはバッチ方向、LayerNormは特徴方向、InstanceNormはサンプルとチャネルごとの空間方向、GroupNormはチャネルグループごとに正規化します。学習時と推論時の統計量の違いにも注意します。",
+    "正則化": "正則化は、モデルが訓練データに過度に適合するのを抑えるための仕組みです。重みに罰則を加える方法、ユニットを確率的に落とす方法、早期終了のように学習過程を制御する方法があります。",
+    "CNN": "CNN系の用語では、入力サイズ、カーネルサイズ、パディング、ストライド、チャネル数がどのように出力shapeとパラメータ数に影響するかを追うことが重要です。重み共有と局所受容野が全結合との大きな違いです。",
+    "系列": "系列モデルでは、時刻方向に状態を伝えるため、勾配が時間方向に何度も伝播します。RNN、LSTM、GRUの違いは、過去情報をどのゲートで保持・忘却するかにあります。",
+    "Attention": "Attentionでは、QueryとKeyから参照重みを作り、Valueを重み付き和します。どのテンソルが系列長方向を持つか、softmaxをどの軸にかけるか、maskがどこで入るかが実装上の要点です。",
+    "Transformer": "TransformerはAttention、残差接続、LayerNorm、MLPブロックの組み合わせです。EncoderとDecoderの違い、Masked Self-Attention、Pre-LN/Post-LNの違いを構造として説明できるようにします。",
+    "生成モデル": "生成モデルでは、データ分布をどう近似するかが中心です。AEは再構成、VAEは潜在分布とKL項、GANは生成器と識別器のゲームとして理解します。",
+    "GNN": "GNNでは、ノード特徴とグラフ構造を同時に扱います。近傍から何を集約するか、集約がノード順序に依存しないか、層を重ねたときに何ホップ先まで情報が届くかが重要です。",
+    "評価": "評価指標は、どの誤りを重く見るかによって使い分けます。不均衡データではAccuracyだけでは危険で、Precision、Recall、F1、ROC-AUCなどをタスクの目的に合わせて選びます。",
+    "実装": "実装系の用語では、数値安定性、shape、ブロードキャスト、勾配の流れ、計算量を確認します。短い式でも、実際の配列操作に落とすとバグが出やすい領域です。"
+  };
+
+  return `${concept.body} ${explanations[concept.category] || "この用語は、数式、データのshape、学習時の挙動、推論時の挙動を分けて理解すると実装に結び付きます。"}`;
+}
+
+function getNumpySample(concept) {
+  if (concept.title === "Batch Normalization") {
+    return `import numpy as np
+
+class BatchNorm1D:
+    def __init__(self, features, momentum=0.9, eps=1e-5):
+        self.gamma = np.ones(features)
+        self.beta = np.zeros(features)
+        self.running_mean = np.zeros(features)
+        self.running_var = np.ones(features)
+        self.momentum = momentum
+        self.eps = eps
+
+    def forward(self, x, training=True):
+        if training:
+            mean = x.mean(axis=0)
+            var = x.var(axis=0)
+            self.running_mean = self.momentum * self.running_mean + (1 - self.momentum) * mean
+            self.running_var = self.momentum * self.running_var + (1 - self.momentum) * var
+        else:
+            mean = self.running_mean
+            var = self.running_var
+        x_hat = (x - mean) / np.sqrt(var + self.eps)
+        return self.gamma * x_hat + self.beta`;
+  }
+
+  if (concept.title === "Adam") {
+    return `import numpy as np
+
+class AdamOptimizer:
+    def __init__(self, params, lr=1e-3, beta1=0.9, beta2=0.999, eps=1e-8):
+        self.params = params
+        self.lr = lr
+        self.beta1 = beta1
+        self.beta2 = beta2
+        self.eps = eps
+        self.m = [np.zeros_like(p) for p in params]
+        self.v = [np.zeros_like(p) for p in params]
+        self.t = 0
+
+    def step(self, grads):
+        self.t += 1
+        for i, grad in enumerate(grads):
+            self.m[i] = self.beta1 * self.m[i] + (1 - self.beta1) * grad
+            self.v[i] = self.beta2 * self.v[i] + (1 - self.beta2) * (grad ** 2)
+            m_hat = self.m[i] / (1 - self.beta1 ** self.t)
+            v_hat = self.v[i] / (1 - self.beta2 ** self.t)
+            self.params[i] -= self.lr * m_hat / (np.sqrt(v_hat) + self.eps)`;
+  }
+
+  if (concept.title === "GAT") {
+    return `import numpy as np
+
+class GraphAttentionLayer:
+    def __init__(self, in_features, out_features):
+        self.W = np.random.randn(in_features, out_features) * np.sqrt(2 / in_features)
+        self.a = np.random.randn(2 * out_features) * 0.01
+
+    def leaky_relu(self, x, alpha=0.2):
+        return np.where(x > 0, x, alpha * x)
+
+    def forward(self, X, neighbors):
+        Z = X @ self.W
+        out = np.zeros_like(Z)
+        for i, ns in enumerate(neighbors):
+            scores = np.array([self.leaky_relu(self.a @ np.r_[Z[i], Z[j]]) for j in ns])
+            weights = np.exp(scores - scores.max())
+            weights = weights / weights.sum()
+            out[i] = sum(w * Z[j] for w, j in zip(weights, ns))
+        return out`;
+  }
+
+  if (concept.title === "GIN") {
+    return `import numpy as np
+
+class GINLayer:
+    def __init__(self, features, eps=0.0):
+        self.eps = eps
+        self.W1 = np.random.randn(features, features) * np.sqrt(2 / features)
+        self.W2 = np.random.randn(features, features) * np.sqrt(2 / features)
+
+    def mlp(self, x):
+        h = np.maximum(0, x @ self.W1)
+        return h @ self.W2
+
+    def forward(self, X, neighbors):
+        out = []
+        for v, ns in enumerate(neighbors):
+            agg = np.sum([X[u] for u in ns], axis=0)
+            out.append(self.mlp((1 + self.eps) * X[v] + agg))
+        return np.stack(out)`;
+  }
+
+  if (concept.title === "GVAE") {
+    return `import numpy as np
+
+class GraphVAE:
+    def encode(self, X, A, W_mu, W_logvar):
+        A_hat = A + np.eye(A.shape[0])
+        H = A_hat @ X
+        mu = H @ W_mu
+        log_var = H @ W_logvar
+        return mu, log_var
+
+    def reparameterize(self, mu, log_var):
+        eps = np.random.randn(*mu.shape)
+        return mu + np.exp(0.5 * log_var) * eps
+
+    def decode(self, Z):
+        logits = Z @ Z.T
+        return 1 / (1 + np.exp(-logits))`;
+  }
+
+  if (concept.category === "GNN") {
+    return `import numpy as np
+
+class SimpleGraphLayer:
+    def __init__(self, in_features, out_features):
+        scale = np.sqrt(2 / in_features)
+        self.W = np.random.randn(in_features, out_features) * scale
+
+    def normalize_adjacency(self, A):
+        A_hat = A + np.eye(A.shape[0])
+        degree = A_hat.sum(axis=1)
+        D_inv_sqrt = np.diag(1 / np.sqrt(degree + 1e-7))
+        return D_inv_sqrt @ A_hat @ D_inv_sqrt
+
+    def forward(self, X, A):
+        A_norm = self.normalize_adjacency(A)
+        H = A_norm @ X @ self.W
+        return np.maximum(0, H)
+
+X = np.random.randn(5, 3)
+A = np.array([[0,1,1,0,0],[1,0,0,1,0],[1,0,0,0,1],[0,1,0,0,1],[0,0,1,1,0]])
+layer = SimpleGraphLayer(in_features=3, out_features=4)
+node_embeddings = layer.forward(X, A)`;
+  }
+
+  if (concept.category === "CNN") {
+    return `import numpy as np
+
+class Conv2D:
+    def __init__(self, kernel_size, stride=1, padding=0):
+        self.stride = stride
+        self.padding = padding
+        self.kernel = np.random.randn(kernel_size, kernel_size) * 0.01
+
+    def forward(self, x):
+        x = np.pad(x, ((self.padding, self.padding), (self.padding, self.padding)))
+        kh, kw = self.kernel.shape
+        oh = (x.shape[0] - kh) // self.stride + 1
+        ow = (x.shape[1] - kw) // self.stride + 1
+        out = np.zeros((oh, ow))
+        for i in range(oh):
+            for j in range(ow):
+                patch = x[i*self.stride:i*self.stride+kh, j*self.stride:j*self.stride+kw]
+                out[i, j] = np.sum(patch * self.kernel)
+        return out`;
+  }
+
+  if (concept.category === "正規化") {
+    return `import numpy as np
+
+class NormalizationLayer:
+    def __init__(self, features, eps=1e-5):
+        self.gamma = np.ones(features)
+        self.beta = np.zeros(features)
+        self.eps = eps
+
+    def layer_norm(self, x):
+        mean = x.mean(axis=-1, keepdims=True)
+        var = x.var(axis=-1, keepdims=True)
+        x_hat = (x - mean) / np.sqrt(var + self.eps)
+        return self.gamma * x_hat + self.beta
+
+x = np.random.randn(4, 8)
+norm = NormalizationLayer(features=8)
+y = norm.layer_norm(x)`;
+  }
+
+  return `import numpy as np
+
+class StudyModule:
+    def __init__(self, in_features, out_features):
+        scale = np.sqrt(2 / max(1, in_features))
+        self.W = np.random.randn(in_features, out_features) * scale
+        self.b = np.zeros(out_features)
+
+    def forward(self, x):
+        z = x @ self.W + self.b
+        return np.maximum(0, z)
+
+    def mse_loss(self, pred, target):
+        diff = pred - target
+        return np.mean(diff ** 2)
+
+    def step(self, x, target, lr=0.01):
+        pred = self.forward(x)
+        loss = self.mse_loss(pred, target)
+        grad_out = 2 * (pred - target) / len(x)
+        grad_z = grad_out * (pred > 0)
+        grad_W = x.T @ grad_z
+        grad_b = grad_z.sum(axis=0)
+        self.W -= lr * grad_W
+        self.b -= lr * grad_b
+        return loss`;
+}
+
+function getTorchSample(concept) {
+  if (concept.title === "Batch Normalization") {
+    return `import torch
+import torch.nn as nn
+
+class TorchBatchNormBlock(nn.Module):
+    def __init__(self, features):
+        super().__init__()
+        self.norm = nn.BatchNorm1d(features)
+        self.proj = nn.Linear(features, features)
+
+    def forward(self, x):
+        x = self.norm(x)
+        return torch.relu(self.proj(x))`;
+  }
+
+  if (concept.title === "Adam") {
+    return `import torch
+import torch.nn as nn
+
+model = nn.Linear(8, 1)
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+criterion = nn.MSELoss()
+
+x = torch.randn(16, 8)
+target = torch.randn(16, 1)
+pred = model(x)
+loss = criterion(pred, target)
+loss.backward()
+optimizer.step()
+optimizer.zero_grad()`;
+  }
+
+  if (concept.category === "GNN") {
+    return `import torch
+import torch.nn as nn
+
+class TorchGCNLayer(nn.Module):
+    def __init__(self, in_features, out_features):
+        super().__init__()
+        self.linear = nn.Linear(in_features, out_features, bias=False)
+
+    def normalize_adjacency(self, A):
+        I = torch.eye(A.size(0), device=A.device)
+        A_hat = A + I
+        degree = A_hat.sum(dim=1)
+        D_inv_sqrt = torch.diag(torch.pow(degree + 1e-7, -0.5))
+        return D_inv_sqrt @ A_hat @ D_inv_sqrt
+
+    def forward(self, X, A):
+        A_norm = self.normalize_adjacency(A)
+        return torch.relu(A_norm @ self.linear(X))`;
+  }
+
+  if (concept.category === "CNN") {
+    return `import torch
+import torch.nn as nn
+
+class TorchConvBlock(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super().__init__()
+        self.block = nn.Sequential(
+            nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU()
+        )
+
+    def forward(self, x):
+        return self.block(x)`;
+  }
+
+  if (concept.category === "正規化") {
+    return `import torch
+import torch.nn as nn
+
+class TorchLayerNormBlock(nn.Module):
+    def __init__(self, features):
+        super().__init__()
+        self.norm = nn.LayerNorm(features)
+        self.proj = nn.Linear(features, features)
+
+    def forward(self, x):
+        x = self.norm(x)
+        return torch.relu(self.proj(x))`;
+  }
+
+  return `import torch
+import torch.nn as nn
+
+class TorchStudyModule(nn.Module):
+    def __init__(self, in_features, out_features):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(in_features, out_features),
+            nn.ReLU(),
+            nn.Linear(out_features, out_features)
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+model = TorchStudyModule(8, 4)
+x = torch.randn(16, 8)
+y = model(x)`;
+}
+
 function getTermDetail(concept) {
-  return termDetails[concept.title] || {
+  const detail = termDetails[concept.title] || {
     formula: getFormulaForConcept(concept),
-    detail: `${concept.body} E資格では、用語の定義だけでなく、どの軸で計算するか、学習時と推論時で挙動が変わるか、勾配がどこへ流れるかまで結び付けて理解することが重要です。`,
-    code: concept.code,
+    detail: getDetailedExplanation(concept),
+    code: getNumpySample(concept),
     points: ["定義と目的を説明できるようにする", "NumPyコードと数式の対応を見る", "学習時・推論時・評価時の違いを確認する"]
+  };
+
+  return {
+    ...detail,
+    numpyCode: detail.numpyCode || getNumpySample(concept),
+    torchCode: detail.torchCode || getTorchSample(concept)
   };
 }
 
@@ -961,8 +1300,12 @@ function renderTermDetailFromHash() {
         <div class="math-formula">${escapeHtml(detail.formula)}</div>
       </section>
       <section class="detail-block">
-        <h3>Python実装例</h3>
-        <pre><code>${escapeHtml(detail.code)}</code></pre>
+        <h3>NumPy実装例</h3>
+        <pre><code>${escapeHtml(detail.numpyCode)}</code></pre>
+      </section>
+      <section class="detail-block">
+        <h3>PyTorch実装例</h3>
+        <pre><code>${escapeHtml(detail.torchCode)}</code></pre>
       </section>
       <section class="detail-block detail-wide">
         <h3>試験で押さえるポイント</h3>
