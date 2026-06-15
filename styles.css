@@ -241,6 +241,21 @@ button {
 .concept {
   display: grid;
   gap: 14px;
+  align-content: start;
+}
+
+.tag {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 28px;
+  align-items: center;
+  padding: 0 10px;
+  color: var(--ink);
+  background: #fff6dc;
+  border: 1px solid rgba(242, 193, 78, 0.7);
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 900;
 }
 
 pre {
