@@ -570,6 +570,8 @@ const quizItems = [
 const progressKey = "ml-studio-progress";
 const roadmapList = document.querySelector("#roadmapList");
 const conceptGrid = document.querySelector("#conceptGrid");
+const termDetailSection = document.querySelector("#term-detail");
+const termDetail = document.querySelector("#termDetail");
 const learningRate = document.querySelector("#learningRate");
 const epochs = document.querySelector("#epochs");
 const learningRateValue = document.querySelector("#learningRateValue");
@@ -589,6 +591,75 @@ const nextQuestion = document.querySelector("#nextQuestion");
 
 let currentQuiz = 0;
 
+const termDetails = {
+  "畳み込み": {
+    formula: "H_out = floor((H + 2P - F) / S) + 1",
+    detail: "畳み込みは、入力の局所領域に同じフィルタを滑らせて特徴を抽出する操作です。画像ではエッジ、模様、部品のような局所パターンを階層的に捉えます。全結合と違い、重み共有によりパラメータ数を抑えられる点が重要です。",
+    code: `def conv2d_single_channel(x, kernel, stride=1, pad=0):
+    x = np.pad(x, ((pad, pad), (pad, pad)))
+    kh, kw = kernel.shape
+    oh = (x.shape[0] - kh) // stride + 1
+    ow = (x.shape[1] - kw) // stride + 1
+    out = np.zeros((oh, ow))
+
+    for i in range(oh):
+        for j in range(ow):
+            patch = x[i * stride:i * stride + kh, j * stride:j * stride + kw]
+            out[i, j] = np.sum(patch * kernel)
+    return out`,
+    points: ["パディングは端の情報を残し、出力サイズを調整する", "ストライドを大きくすると空間サイズは小さくなる", "フィルタ数は出力チャネル数に対応する"]
+  },
+  "Batch Normalization": {
+    formula: "y = gamma * (x - mu_B) / sqrt(var_B + eps) + beta",
+    detail: "BatchNormはミニバッチ統計量で中間表現を正規化し、スケールgammaとシフトbetaで表現力を戻します。学習時はバッチ平均・分散を使い、推論時は学習中に蓄積したrunning meanとrunning varianceを使います。",
+    code: `def batch_norm_train(x, gamma, beta, eps=1e-5):
+    mu = x.mean(axis=0, keepdims=True)
+    var = x.var(axis=0, keepdims=True)
+    x_hat = (x - mu) / np.sqrt(var + eps)
+    out = gamma * x_hat + beta
+    return out, mu, var`,
+    points: ["学習時と推論時で統計量が違う", "gammaとbetaは学習可能パラメータ", "小さいバッチでは統計量が不安定になりやすい"]
+  },
+  "Layer Normalization": {
+    formula: "y = gamma * (x - mu_feature) / sqrt(var_feature + eps) + beta",
+    detail: "LayerNormは各サンプルごとに特徴次元で正規化します。バッチ方向を使わないため、系列モデルやTransformerのようにバッチサイズが変わりやすい場面で扱いやすいです。",
+    code: `def layer_norm(x, gamma, beta, eps=1e-5):
+    mu = x.mean(axis=-1, keepdims=True)
+    var = x.var(axis=-1, keepdims=True)
+    return gamma * (x - mu) / np.sqrt(var + eps) + beta`,
+    points: ["バッチサイズに依存しにくい", "TransformerではPre-LN/Post-LNの違いも重要", "正規化する軸がBatchNormと異なる"]
+  },
+  "Adam": {
+    formula: "m_t = beta1*m + (1-beta1)*g, v_t = beta2*v + (1-beta2)*g^2",
+    detail: "AdamはMomentumのような一次モーメントと、RMSPropのような二次モーメントを組み合わせた最適化手法です。初期値0による偏りを補正するため、m_hatとv_hatを使います。",
+    code: `m = beta1 * m + (1 - beta1) * grad
+v = beta2 * v + (1 - beta2) * grad**2
+m_hat = m / (1 - beta1**t)
+v_hat = v / (1 - beta2**t)
+w -= lr * m_hat / (np.sqrt(v_hat) + eps)`,
+    points: ["一次モーメントは勾配の移動平均", "二次モーメントは二乗勾配の移動平均", "AdamWではweight decayを更新式から分離する"]
+  },
+  "Scaled Dot-Product Attention": {
+    formula: "Attention(Q,K,V) = softmax(QK^T / sqrt(d_k))V",
+    detail: "AttentionはQueryとKeyの類似度から重みを作り、その重みでValueを加重平均します。sqrt(d_k)で割るのは、内積値が大きくなりsoftmaxが飽和することを防ぐためです。",
+    code: `def attention(Q, K, V):
+    d_k = Q.shape[-1]
+    scores = Q @ K.T / np.sqrt(d_k)
+    weights = softmax(scores)
+    return weights @ V`,
+    points: ["QとKで参照の強さを決める", "Vを重み付き和して出力する", "Transformerの中核演算"]
+  },
+  "Variational AutoEncoder": {
+    formula: "L = reconstruction_loss + D_KL(q(z|x) || p(z))",
+    detail: "VAEは潜在変数を確率分布として学習する生成モデルです。再構成誤差だけでなく、潜在分布を標準正規分布などの事前分布に近づけるKL項を加えます。",
+    code: `eps = np.random.randn(*mu.shape)
+z = mu + np.exp(0.5 * log_var) * eps
+kl = -0.5 * np.sum(1 + log_var - mu**2 - np.exp(log_var))
+loss = recon_loss + kl`,
+    points: ["再パラメータ化トリックで勾配を流す", "KL項が潜在空間を整える", "生成時は事前分布からzをサンプルする"]
+  }
+};
+
 function escapeHtml(value) {
   return value.replace(/[&<>"']/g, (char) => ({
     "&": "&amp;",
@@ -597,6 +668,19 @@ function escapeHtml(value) {
     "\"": "&quot;",
     "'": "&#039;"
   })[char]);
+}
+
+function slugifyTerm(title) {
+  return encodeURIComponent(title.replace(/\s+/g, "-").toLowerCase());
+}
+
+function getTermDetail(concept) {
+  return termDetails[concept.title] || {
+    formula: concept.code,
+    detail: `${concept.body} E資格では、用語の定義だけでなく、どの軸で計算するか、学習時と推論時で挙動が変わるか、勾配がどこへ流れるかまで結び付けて理解することが重要です。`,
+    code: concept.code,
+    points: ["定義と目的を説明できるようにする", "NumPyコードと数式の対応を見る", "学習時・推論時・評価時の違いを確認する"]
+  };
 }
 
 function readProgress() {
@@ -643,13 +727,69 @@ function renderRoadmap() {
 
 function renderConcepts() {
   conceptGrid.innerHTML = concepts.map((concept) => `
-    <article class="concept">
+    <article class="concept concept-link" id="term-card-${slugifyTerm(concept.title)}" tabindex="0" role="link" data-term="${slugifyTerm(concept.title)}">
       <span class="tag">${concept.category}</span>
       <h3>${concept.title}</h3>
       <p>${concept.body}</p>
       <pre><code>${escapeHtml(concept.code)}</code></pre>
+      <a class="detail-link" href="#term-${slugifyTerm(concept.title)}">詳細を見る</a>
     </article>
   `).join("");
+
+  conceptGrid.querySelectorAll(".concept-link").forEach((card) => {
+    card.addEventListener("click", (event) => {
+      if (event.target.closest("a")) return;
+      location.hash = `term-${card.dataset.term}`;
+    });
+    card.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        location.hash = `term-${card.dataset.term}`;
+      }
+    });
+  });
+}
+
+function renderTermDetailFromHash() {
+  if (!location.hash.startsWith("#term-")) {
+    termDetailSection.hidden = true;
+    return;
+  }
+
+  const slug = location.hash.replace("#term-", "");
+  const concept = concepts.find((item) => slugifyTerm(item.title) === slug);
+  if (!concept) {
+    termDetailSection.hidden = true;
+    return;
+  }
+
+  const detail = getTermDetail(concept);
+  termDetailSection.hidden = false;
+  termDetail.innerHTML = `
+    <a class="back-link" href="#concepts">用語一覧へ戻る</a>
+    <div class="term-hero">
+      <span class="tag">${concept.category}</span>
+      <h2 id="termDetailTitle">${concept.title}</h2>
+      <p>${detail.detail}</p>
+    </div>
+    <div class="detail-grid">
+      <section class="detail-block">
+        <h3>数式・考え方</h3>
+        <pre><code>${escapeHtml(detail.formula)}</code></pre>
+      </section>
+      <section class="detail-block">
+        <h3>Python実装例</h3>
+        <pre><code>${escapeHtml(detail.code)}</code></pre>
+      </section>
+      <section class="detail-block detail-wide">
+        <h3>試験で押さえるポイント</h3>
+        <ul>
+          ${detail.points.map((point) => `<li>${point}</li>`).join("")}
+        </ul>
+      </section>
+    </div>
+  `;
+  termDetailSection.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function createLossSeries(rate, epochCount) {
@@ -793,10 +933,12 @@ renderRoadmap();
 renderConcepts();
 renderQuiz();
 updateExperiment();
+renderTermDetailFromHash();
 
 learningRate.addEventListener("input", updateExperiment);
 epochs.addEventListener("input", updateExperiment);
 runExperiment.addEventListener("click", updateExperiment);
+window.addEventListener("hashchange", renderTermDetailFromHash);
 prevQuestion.addEventListener("click", () => {
   currentQuiz = Math.max(0, currentQuiz - 1);
   renderQuiz();
