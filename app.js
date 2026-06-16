@@ -53,6 +53,24 @@ const concepts = [
     code: "nll = -np.sum(np.log(model_prob + 1e-7))"
   },
   {
+    category: "数学",
+    title: "Softmax",
+    body: "ロジットを多クラスの確率分布へ変換する関数です。数値安定化のため最大値を引いてから指数を取ります。",
+    code: "z = x - np.max(x, axis=-1, keepdims=True)\nprob = np.exp(z) / np.sum(np.exp(z), axis=-1, keepdims=True)"
+  },
+  {
+    category: "数学",
+    title: "交差エントロピー",
+    body: "分類で使われる代表的な損失です。正解クラスの予測確率が低いほど損失が大きくなります。",
+    code: "loss = -np.mean(np.log(prob[np.arange(n), target] + 1e-7))"
+  },
+  {
+    category: "数学",
+    title: "誤差逆伝播",
+    body: "出力側から入力側へ勾配を伝え、各パラメータの勾配を効率よく求める手法です。連鎖律を計算グラフに適用します。",
+    code: "dW = x.T @ dout\ndx = dout @ W.T"
+  },
+  {
     category: "最適化",
     title: "Batch Gradient Descent",
     body: "全データで勾配を計算して更新します。安定しやすい一方、大規模データでは1更新が重くなります。",
@@ -93,6 +111,18 @@ const concepts = [
     title: "Adam",
     body: "勾配の一次モーメントと二次モーメントを使い、バイアス補正して更新します。",
     code: "m = b1 * m + (1 - b1) * grad\nv = b2 * v + (1 - b2) * grad**2\nw -= lr * m_hat / (np.sqrt(v_hat) + eps)"
+  },
+  {
+    category: "最適化",
+    title: "Gradient Clipping",
+    body: "勾配ノルムが閾値を超えたときにスケールを抑え、勾配爆発を防ぐ手法です。RNNや大規模モデルで重要です。",
+    code: "grad = grad * clip_norm / max(clip_norm, np.linalg.norm(grad))"
+  },
+  {
+    category: "最適化",
+    title: "Learning Rate Scheduler",
+    body: "学習の進行に応じて学習率を変える仕組みです。Step decay、Cosine、Warmupなどがあります。",
+    code: "lr = base_lr * 0.5 * (1 + np.cos(np.pi * step / total_steps))"
   },
   {
     category: "正則化",
@@ -261,6 +291,12 @@ const concepts = [
     title: "GVAE",
     body: "Graph Variational AutoEncoderは、ノード埋め込みの潜在分布からリンクや隣接行列を再構成する生成モデルです。",
     code: "Z = mu + sigma * eps\nA_logits = Z @ Z.T\nloss = bce_with_logits(A_logits, A) + kl_loss"
+  },
+  {
+    category: "GNN",
+    title: "GraphSAGE",
+    body: "近傍ノードをサンプリングして集約するGNNです。大規模グラフで全近傍を使う計算負荷を抑えます。",
+    code: "h_v = sigma(W @ concat(h_v, mean([h_u for u in sampled_neighbors])))"
   },
   {
     category: "評価",
@@ -602,6 +638,42 @@ const quizItems = [
     code: "grad_norm = np.linalg.norm(grad)\ngrad = grad * clip_norm / max(clip_norm, grad_norm)"
   },
   {
+    category: "数学",
+    type: "選択問題",
+    question: "Softmaxを数値安定に実装するとき、expの前に最大値を引く理由はどれか。",
+    answers: ["指数関数のオーバーフローを防ぐため", "正解ラベルをone-hotにするため", "勾配を必ず0にするため"],
+    correct: 0,
+    explain: "Softmaxは全ロジットから同じ定数を引いても結果が変わりません。最大値を引くとexpに入る値が0以下になりやすく、オーバーフローを防げます。",
+    code: "z = logits - logits.max(axis=-1, keepdims=True)\nprob = np.exp(z) / np.exp(z).sum(axis=-1, keepdims=True)"
+  },
+  {
+    category: "数学",
+    type: "選択問題",
+    question: "Softmaxと交差エントロピーを組み合わせた多クラス分類で、損失が大きくなるのはどの状況か。",
+    answers: ["正解クラスの予測確率が低いとき", "全クラスの確率和が1のとき", "ロジットの最大値を引いたとき"],
+    correct: 0,
+    explain: "交差エントロピーは正解クラス確率の負の対数です。正解クラス確率が低いほど -log(p) が大きくなります。",
+    code: "loss = -np.mean(np.log(prob[np.arange(n), target] + 1e-7))"
+  },
+  {
+    category: "最適化",
+    type: "選択問題",
+    question: "Learning Rate Schedulerの目的として最も適切なものはどれか。",
+    answers: ["学習の段階に応じて更新幅を調整し、安定性や収束を改善する", "パラメータ数を必ず0にする", "BatchNormのrunning meanを削除する"],
+    correct: 0,
+    explain: "学習初期は大きめ、後半は小さめにするなど、学習率を変えることで探索と収束のバランスを取りやすくなります。WarmupやCosine decayが代表例です。",
+    code: "lr = base_lr * 0.5 * (1 + np.cos(np.pi * step / total_steps))"
+  },
+  {
+    category: "GNN",
+    type: "選択問題",
+    question: "GraphSAGEが大規模グラフで有効な理由として適切なものはどれか。",
+    answers: ["近傍をサンプリングして集約するため計算量を抑えやすい", "全ノードを必ず完全結合にするため", "隣接行列を一切使えないため"],
+    correct: 0,
+    explain: "GraphSAGEは全近傍を毎回使うのではなく、サンプリングした近傍を集約します。大規模グラフでミニバッチ学習しやすい点が特徴です。",
+    code: "h_v = sigma(W @ np.r_[h_v, np.mean(sampled_neighbor_features, axis=0)])"
+  },
+  {
     category: "GNN",
     type: "選択問題",
     question: "GNNのMessage Passingの説明として最も適切なものはどれか。",
@@ -827,12 +899,17 @@ function getFormulaForConcept(concept) {
     "エントロピー": "\\displaystyle H(p)=-\\sum_x p(x)\\log p(x)",
     "KLダイバージェンス": "\\displaystyle D_{KL}(p\\|q)=\\sum_x p(x)\\log\\frac{p(x)}{q(x)}",
     "最尤推定": "\\displaystyle \\hat{\\theta}=\\arg\\max_\\theta \\prod_{i=1}^N p(x_i|\\theta)",
+    "Softmax": "\\displaystyle \\mathrm{softmax}(z_i)=\\frac{e^{z_i}}{\\sum_j e^{z_j}}",
+    "交差エントロピー": "\\displaystyle L=-\\sum_{k=1}^{K}y_k\\log \\hat{y}_k",
+    "誤差逆伝播": "\\displaystyle \\frac{\\partial L}{\\partial W}=\\frac{\\partial L}{\\partial y}\\frac{\\partial y}{\\partial W}",
     "Batch Gradient Descent": "\\displaystyle \\theta_{t+1}=\\theta_t-\\eta\\nabla_\\theta L(\\theta;X)",
     "Stochastic Gradient Descent": "\\displaystyle \\theta_{t+1}=\\theta_t-\\eta\\nabla_\\theta L(\\theta;x_i,y_i)",
     "Momentum": "\\displaystyle v_t=\\mu v_{t-1}-\\eta g_t,\\quad \\theta_{t+1}=\\theta_t+v_t",
     "Nesterov Momentum": "\\displaystyle g_t=\\nabla L(\\theta_t+\\mu v_{t-1}),\\quad v_t=\\mu v_{t-1}-\\eta g_t",
     "AdaGrad": "\\displaystyle \\theta_{t+1}=\\theta_t-\\frac{\\eta}{\\sqrt{G_t}+\\epsilon}g_t",
     "RMSProp": "\\displaystyle E[g^2]_t=\\rho E[g^2]_{t-1}+(1-\\rho)g_t^2",
+    "Gradient Clipping": "\\displaystyle g'=g\\cdot\\frac{c}{\\max(c,\\|g\\|_2)}",
+    "Learning Rate Scheduler": "\\displaystyle \\eta_t=\\eta_{min}+\\frac{1}{2}(\\eta_{max}-\\eta_{min})(1+\\cos(\\pi t/T))",
     "L1正則化": "\\displaystyle L'=L+\\lambda\\sum_i |w_i|",
     "L2正則化": "\\displaystyle L'=L+\\lambda\\sum_i w_i^2",
     "Weight Decay": "\\displaystyle w_{t+1}=w_t-\\eta\\nabla L(w_t)-\\eta\\lambda w_t",
@@ -918,6 +995,9 @@ const termStudyPoints = {
   "エントロピー": ["不確実性の大きさを表す", "確率が偏るほど小さく一様に近いほど大きい", "交差エントロピーとの違いを説明する"],
   "KLダイバージェンス": ["非対称で距離関数ではない", "2つの分布のずれを測る", "VAEや知識蒸留でどの分布を近づけるかを確認する"],
   "最尤推定": ["尤度最大化と負の対数尤度最小化を対応させる", "独立同分布なら尤度は積になる", "分類の交差エントロピーと結び付ける"],
+  "Softmax": ["ロジットを確率分布に変換する", "最大値を引く数値安定化を説明する", "softmaxをかける軸を確認する"],
+  "交差エントロピー": ["正解クラスの確率が低いほど損失が大きい", "one-hotラベルと負の対数尤度を対応させる", "softmaxと組み合わせた実装を理解する"],
+  "誤差逆伝播": ["上流勾配と局所勾配を分けて考える", "連鎖律を計算グラフに適用する", "各層で必要な中間値を保存する理由を理解する"],
   "Batch Gradient Descent": ["全データで1回の勾配を計算する", "更新は安定しやすいが計算が重い", "学習率が大きい場合と小さい場合を説明する"],
   "Stochastic Gradient Descent": ["ミニバッチで勾配を近似する", "勾配ノイズがあるため更新が揺れる", "バッチサイズと汎化性能の関係を意識する"],
   "Momentum": ["速度ベクトルに過去の勾配を蓄積する", "谷方向の振動を抑えやすい", "更新式の符号を間違えない"],
@@ -925,6 +1005,8 @@ const termStudyPoints = {
   "AdaGrad": ["二乗勾配の累積で学習率を調整する", "頻出特徴の更新が小さくなる", "後半に学習率が小さくなりすぎる弱点を説明する"],
   "RMSProp": ["二乗勾配の指数移動平均を使う", "AdaGradの単調減少問題を緩和する", "rhoが移動平均の滑らかさを決める"],
   "Adam": ["一次モーメントと二次モーメントを使う", "初期ステップではバイアス補正が必要", "AdamWとのWeight Decayの違いを説明する"],
+  "Gradient Clipping": ["勾配ノルムが閾値を超えたときだけ縮小する", "勾配爆発対策として使う", "勾配方向を保ったまま大きさを抑える"],
+  "Learning Rate Scheduler": ["学習率を固定せず段階的または連続的に変える", "warmupやcosine decayの目的を説明する", "optimizer.stepとscheduler.stepの順序に注意する"],
   "L1正則化": ["重みの絶対値和に罰則を与える", "スパースな重みになりやすい", "0付近で微分不能な点を意識する"],
   "L2正則化": ["重みの二乗和に罰則を与える", "大きな重みを滑らかに抑える", "Weight Decayとの関係を説明する"],
   "Weight Decay": ["更新時に重みを直接縮小する", "AdamWでは勾配更新と分離する", "L2正則化と完全に同じでない場合を説明する"],
@@ -953,11 +1035,192 @@ const termStudyPoints = {
   "GAT": ["Attention係数をエッジごとに学習する", "GCNとの重み付けの違いを説明する", "Multi-head GATの目的を理解する"],
   "GIN": ["sum集約とMLPで表現力を高める", "WLテストとの関係を説明する", "epsの役割を理解する"],
   "GVAE": ["潜在変数から隣接行列を再構成する", "内積デコーダの意味を説明する", "再構成項とKL項を分けて理解する"],
+  "GraphSAGE": ["近傍サンプリングで大規模グラフに対応する", "自己特徴と近傍集約をconcatする", "mean/max/LSTM aggregatorの違いを理解する"],
   "Precision / Recall / F1": ["TP/FP/FNから式を説明する", "不均衡データでAccuracyだけを見ない", "Precision重視かRecall重視かをタスクで判断する"],
   "ROC-AUC": ["閾値を動かしたTPR/FPRを見る", "ランキング性能として解釈する", "PR-AUCとの使い分けを意識する"]
 };
 
 const numpySamples = {
+  "Adam": `import numpy as np
+
+class AdamOptimizer:
+    def __init__(self, params, lr=1e-3, beta1=0.9, beta2=0.999, eps=1e-8):
+        self.params = params
+        self.lr, self.beta1, self.beta2, self.eps = lr, beta1, beta2, eps
+        self.m = [np.zeros_like(p) for p in params]
+        self.v = [np.zeros_like(p) for p in params]
+        self.t = 0
+
+    def step(self, grads):
+        self.t += 1
+        for i, grad in enumerate(grads):
+            self.m[i] = self.beta1 * self.m[i] + (1 - self.beta1) * grad
+            self.v[i] = self.beta2 * self.v[i] + (1 - self.beta2) * grad**2
+            m_hat = self.m[i] / (1 - self.beta1**self.t)
+            v_hat = self.v[i] / (1 - self.beta2**self.t)
+            self.params[i] -= self.lr * m_hat / (np.sqrt(v_hat) + self.eps)`,
+  "Batch Normalization": `import numpy as np
+
+class BatchNorm1D:
+    def __init__(self, features, momentum=0.9, eps=1e-5):
+        self.gamma = np.ones(features)
+        self.beta = np.zeros(features)
+        self.running_mean = np.zeros(features)
+        self.running_var = np.ones(features)
+        self.momentum = momentum
+        self.eps = eps
+
+    def forward(self, x, training=True):
+        if training:
+            mean, var = x.mean(axis=0), x.var(axis=0)
+            self.running_mean = self.momentum * self.running_mean + (1 - self.momentum) * mean
+            self.running_var = self.momentum * self.running_var + (1 - self.momentum) * var
+        else:
+            mean, var = self.running_mean, self.running_var
+        return self.gamma * (x - mean) / np.sqrt(var + self.eps) + self.beta`,
+  "畳み込み": `import numpy as np
+
+class Conv2D:
+    def __init__(self, kernel, stride=1, pad=0):
+        self.kernel = kernel
+        self.stride = stride
+        self.pad = pad
+
+    def forward(self, x):
+        x = np.pad(x, ((self.pad, self.pad), (self.pad, self.pad)))
+        kh, kw = self.kernel.shape
+        oh = (x.shape[0] - kh) // self.stride + 1
+        ow = (x.shape[1] - kw) // self.stride + 1
+        out = np.zeros((oh, ow))
+        for i in range(oh):
+            for j in range(ow):
+                patch = x[i*self.stride:i*self.stride+kh, j*self.stride:j*self.stride+kw]
+                out[i, j] = np.sum(patch * self.kernel)
+        return out`,
+  "Graph Neural Network": `import numpy as np
+
+class SimpleGNNLayer:
+    def __init__(self, in_dim, out_dim):
+        self.W = np.random.randn(in_dim, out_dim) * np.sqrt(2 / in_dim)
+
+    def forward(self, X, A):
+        A_hat = A + np.eye(A.shape[0])
+        D = np.diag(1 / np.sqrt(A_hat.sum(axis=1) + 1e-7))
+        return np.maximum(0, D @ A_hat @ D @ X @ self.W)`,
+  "Message Passing": `import numpy as np
+
+class MessagePassing:
+    def forward(self, X, neighbors):
+        out = []
+        for v, ns in enumerate(neighbors):
+            message = np.mean([X[u] for u in ns], axis=0)
+            out.append(np.maximum(0, X[v] + message))
+        return np.stack(out)`,
+  "GCN": `import numpy as np
+
+class GCNLayer:
+    def __init__(self, in_dim, out_dim):
+        self.W = np.random.randn(in_dim, out_dim) * np.sqrt(2 / in_dim)
+
+    def forward(self, X, A):
+        A_hat = A + np.eye(A.shape[0])
+        D_inv = np.diag(1 / np.sqrt(A_hat.sum(axis=1) + 1e-7))
+        return np.maximum(0, D_inv @ A_hat @ D_inv @ X @ self.W)`,
+  "GAT": `import numpy as np
+
+class GATLayer:
+    def __init__(self, in_dim, out_dim):
+        self.W = np.random.randn(in_dim, out_dim) * np.sqrt(2 / in_dim)
+        self.a = np.random.randn(2 * out_dim) * 0.01
+
+    def forward(self, X, neighbors):
+        Z = X @ self.W
+        out = np.zeros_like(Z)
+        for i, ns in enumerate(neighbors):
+            scores = np.array([np.maximum(0.2 * (self.a @ np.r_[Z[i], Z[j]]), self.a @ np.r_[Z[i], Z[j]]) for j in ns])
+            alpha = np.exp(scores - scores.max()); alpha /= alpha.sum()
+            out[i] = sum(w * Z[j] for w, j in zip(alpha, ns))
+        return out`,
+  "GIN": `import numpy as np
+
+class GINLayer:
+    def __init__(self, dim, eps=0.0):
+        self.eps = eps
+        self.W = np.random.randn(dim, dim) * np.sqrt(2 / dim)
+
+    def forward(self, X, neighbors):
+        out = []
+        for v, ns in enumerate(neighbors):
+            agg = np.sum([X[u] for u in ns], axis=0)
+            out.append(np.maximum(0, ((1 + self.eps) * X[v] + agg) @ self.W))
+        return np.stack(out)`,
+  "GVAE": `import numpy as np
+
+class GVAE:
+    def encode(self, X, A, W_mu, W_logvar):
+        H = (A + np.eye(A.shape[0])) @ X
+        return H @ W_mu, H @ W_logvar
+
+    def reparameterize(self, mu, log_var):
+        return mu + np.exp(0.5 * log_var) * np.random.randn(*mu.shape)
+
+    def decode(self, Z):
+        return 1 / (1 + np.exp(-(Z @ Z.T)))`,
+  "Softmax": `import numpy as np
+
+class Softmax:
+    def forward(self, x):
+        z = x - x.max(axis=-1, keepdims=True)
+        exp_z = np.exp(z)
+        return exp_z / exp_z.sum(axis=-1, keepdims=True)`,
+  "交差エントロピー": `import numpy as np
+
+class CrossEntropyLoss:
+    def forward(self, logits, target):
+        z = logits - logits.max(axis=1, keepdims=True)
+        probs = np.exp(z) / np.exp(z).sum(axis=1, keepdims=True)
+        return -np.mean(np.log(probs[np.arange(len(target)), target] + 1e-7))`,
+  "誤差逆伝播": `import numpy as np
+
+class LinearBackward:
+    def forward(self, x, W):
+        self.x, self.W = x, W
+        return x @ W
+
+    def backward(self, dout):
+        dW = self.x.T @ dout
+        dx = dout @ self.W.T
+        return dx, dW`,
+  "Gradient Clipping": `import numpy as np
+
+class GradientClipper:
+    def __init__(self, max_norm):
+        self.max_norm = max_norm
+
+    def clip(self, grad):
+        norm = np.linalg.norm(grad)
+        return grad * self.max_norm / max(self.max_norm, norm)`,
+  "Learning Rate Scheduler": `import numpy as np
+
+class CosineScheduler:
+    def __init__(self, base_lr, total_steps):
+        self.base_lr = base_lr
+        self.total_steps = total_steps
+
+    def lr(self, step):
+        return self.base_lr * 0.5 * (1 + np.cos(np.pi * step / self.total_steps))`,
+  "GraphSAGE": `import numpy as np
+
+class GraphSAGELayer:
+    def __init__(self, in_dim, out_dim):
+        self.W = np.random.randn(2 * in_dim, out_dim) * np.sqrt(2 / (2 * in_dim))
+
+    def forward(self, X, sampled_neighbors):
+        out = []
+        for v, ns in enumerate(sampled_neighbors):
+            neigh = np.mean([X[u] for u in ns], axis=0)
+            out.append(np.maximum(0, np.r_[X[v], neigh] @ self.W))
+        return np.stack(out)`,
   "偏微分と勾配": `import numpy as np
 
 class LinearRegressionGrad:
@@ -1317,6 +1580,143 @@ class RocPoints:
 };
 
 const torchSamples = {
+  "Adam": `import torch
+import torch.nn as nn
+
+model = nn.Linear(8, 1)
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+loss = nn.MSELoss()(model(torch.randn(16, 8)), torch.randn(16, 1))
+loss.backward()
+optimizer.step()
+optimizer.zero_grad()`,
+  "Batch Normalization": `import torch.nn as nn
+
+class BatchNormBlock(nn.Module):
+    def __init__(self, features):
+        super().__init__()
+        self.norm = nn.BatchNorm1d(features)
+        self.proj = nn.Linear(features, features)
+
+    def forward(self, x):
+        return self.proj(self.norm(x))`,
+  "畳み込み": `import torch.nn as nn
+
+class ConvBlock(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super().__init__()
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1)
+
+    def forward(self, x):
+        return self.conv(x)`,
+  "Graph Neural Network": `import torch
+import torch.nn as nn
+
+class TorchGNNLayer(nn.Module):
+    def __init__(self, in_dim, out_dim):
+        super().__init__()
+        self.linear = nn.Linear(in_dim, out_dim, bias=False)
+
+    def forward(self, X, A):
+        I = torch.eye(A.size(0), device=A.device)
+        A_hat = A + I
+        D = torch.diag(torch.pow(A_hat.sum(1) + 1e-7, -0.5))
+        return torch.relu(D @ A_hat @ D @ self.linear(X))`,
+  "Message Passing": `import torch
+import torch.nn as nn
+
+class TorchMessagePassing(nn.Module):
+    def forward(self, X, edge_index):
+        src, dst = edge_index
+        out = torch.zeros_like(X)
+        out.index_add_(0, dst, X[src])
+        degree = torch.bincount(dst, minlength=X.size(0)).clamp(min=1).unsqueeze(1)
+        return torch.relu(X + out / degree)`,
+  "GCN": `import torch
+import torch.nn as nn
+
+class TorchGCNLayer(nn.Module):
+    def __init__(self, in_dim, out_dim):
+        super().__init__()
+        self.linear = nn.Linear(in_dim, out_dim, bias=False)
+
+    def forward(self, X, A):
+        A_hat = A + torch.eye(A.size(0), device=A.device)
+        D = torch.diag(torch.pow(A_hat.sum(1) + 1e-7, -0.5))
+        return torch.relu(D @ A_hat @ D @ self.linear(X))`,
+  "GAT": `import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class TorchGATScore(nn.Module):
+    def __init__(self, dim):
+        super().__init__()
+        self.attn = nn.Linear(2 * dim, 1)
+
+    def edge_score(self, h_i, h_j):
+        return F.leaky_relu(self.attn(torch.cat([h_i, h_j], dim=-1)))`,
+  "GIN": `import torch
+import torch.nn as nn
+
+class TorchGINLayer(nn.Module):
+    def __init__(self, dim):
+        super().__init__()
+        self.eps = nn.Parameter(torch.zeros(1))
+        self.mlp = nn.Sequential(nn.Linear(dim, dim), nn.ReLU(), nn.Linear(dim, dim))
+
+    def forward(self, x, aggregated_neighbors):
+        return self.mlp((1 + self.eps) * x + aggregated_neighbors)`,
+  "GVAE": `import torch
+import torch.nn as nn
+
+class TorchGVAEHead(nn.Module):
+    def reparameterize(self, mu, log_var):
+        return mu + torch.exp(0.5 * log_var) * torch.randn_like(mu)
+
+    def decode(self, z):
+        return torch.sigmoid(z @ z.t())`,
+  "Softmax": `import torch
+import torch.nn.functional as F
+
+logits = torch.randn(4, 10)
+prob = F.softmax(logits, dim=-1)`,
+  "交差エントロピー": `import torch
+import torch.nn as nn
+
+criterion = nn.CrossEntropyLoss()
+logits = torch.randn(8, 3)
+target = torch.randint(0, 3, (8,))
+loss = criterion(logits, target)`,
+  "誤差逆伝播": `import torch
+
+x = torch.randn(4, 3, requires_grad=True)
+W = torch.randn(3, 2, requires_grad=True)
+y = x @ W
+loss = y.pow(2).mean()
+loss.backward()`,
+  "Gradient Clipping": `import torch
+import torch.nn.utils as utils
+
+model = torch.nn.Linear(8, 1)
+loss = model(torch.randn(4, 8)).pow(2).mean()
+loss.backward()
+utils.clip_grad_norm_(model.parameters(), max_norm=1.0)`,
+  "Learning Rate Scheduler": `import torch
+
+model = torch.nn.Linear(8, 1)
+optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=100)
+optimizer.step()
+scheduler.step()`,
+  "GraphSAGE": `import torch
+import torch.nn as nn
+
+class TorchGraphSAGE(nn.Module):
+    def __init__(self, in_dim, out_dim):
+        super().__init__()
+        self.linear = nn.Linear(2 * in_dim, out_dim)
+
+    def forward(self, self_x, neigh_mean):
+        return torch.relu(self.linear(torch.cat([self_x, neigh_mean], dim=-1)))`,
   "偏微分と勾配": `import torch
 
 w = torch.zeros(3, 1, requires_grad=True)
