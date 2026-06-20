@@ -23,6 +23,96 @@ const roadmap = [
 
 const concepts = [
   {
+    category: "Python",
+    title: "スライス",
+    body: "シーケンスやNumPy配列から範囲を切り出す構文です。start:stop:stepと、ビュー・コピーの違いを理解します。",
+    code: "x = np.arange(10)\npart = x[2:8:2]\nreversed_x = x[::-1]"
+  },
+  {
+    category: "NumPy",
+    title: "ブロードキャスト",
+    body: "shapeが異なる配列同士を、末尾の次元から互換性を判定して暗黙に拡張する仕組みです。",
+    code: "x = np.arange(6).reshape(2, 3)\nbias = np.array([10, 20, 30])\ny = x + bias"
+  },
+  {
+    category: "NumPy",
+    title: "np.dotと行列積",
+    body: "内積・行列積を計算します。1次元、2次元、高次元で挙動が変わるため、@やnp.matmulとの違いも確認します。",
+    code: "y = np.dot(X, W)\ny_same = X @ W"
+  },
+  {
+    category: "NumPy",
+    title: "axisとkeepdims",
+    body: "集約する軸を指定する考え方です。keepdims=Trueは次元を残し、ブロードキャストしやすくします。",
+    code: "mean = x.mean(axis=0, keepdims=True)\nx_centered = x - mean"
+  },
+  {
+    category: "NumPy",
+    title: "Boolean Indexing",
+    body: "条件式から真偽値マスクを作り、条件を満たす要素や行だけを抽出・更新します。",
+    code: "mask = x > 0\npositive = x[mask]\nx[mask] = 1"
+  },
+  {
+    category: "Pandas",
+    title: "DataFrameとSeries",
+    body: "Seriesはラベル付き1次元データ、DataFrameは列ごとに型を持てる表形式データです。",
+    code: "df = pd.DataFrame({'x': [1, 2], 'y': [3, 4]})\ncolumn = df['x']"
+  },
+  {
+    category: "Pandas",
+    title: "groupbyと集約",
+    body: "カテゴリごとにデータを分割し、平均・合計・件数などを集約するsplit-apply-combine操作です。",
+    code: "summary = df.groupby('class')['score'].agg(['mean', 'std', 'count'])"
+  },
+  {
+    category: "Pandas",
+    title: "mergeとjoin",
+    body: "キー列やインデックスを使って複数の表を結合します。inner、left、right、outerの違いが重要です。",
+    code: "result = pd.merge(left, right, on='id', how='left')"
+  },
+  {
+    category: "Pandas",
+    title: "欠損値処理",
+    body: "NaNを検出し、削除・補完・フラグ化します。訓練データだけで補完値を推定してリークを防ぎます。",
+    code: "median = train['age'].median()\ntrain['age'] = train['age'].fillna(median)"
+  },
+  {
+    category: "統計",
+    title: "期待値と分散",
+    body: "期待値は確率変数の平均的位置、分散は期待値からのばらつきの大きさを表します。",
+    code: "mean = np.sum(values * probs)\nvar = np.sum((values - mean)**2 * probs)"
+  },
+  {
+    category: "統計",
+    title: "共分散と相関係数",
+    body: "共分散は2変数の同時変動、相関係数は共分散を標準偏差で正規化した尺度です。",
+    code: "cov = np.cov(x, y, ddof=1)[0, 1]\ncorr = np.corrcoef(x, y)[0, 1]"
+  },
+  {
+    category: "確率分布",
+    title: "ベルヌーイ分布と二項分布",
+    body: "ベルヌーイ分布は1回の成功・失敗、二項分布は独立なベルヌーイ試行の成功回数を表します。",
+    code: "samples = np.random.binomial(n=1, p=0.7, size=1000)\ncounts = np.random.binomial(n=10, p=0.7, size=1000)"
+  },
+  {
+    category: "確率分布",
+    title: "正規分布",
+    body: "平均と分散で形が決まる連続分布です。標準化、中心極限定理、重み初期化と深く関係します。",
+    code: "x = np.random.normal(loc=0.0, scale=1.0, size=1000)\nz = (x - x.mean()) / x.std()"
+  },
+  {
+    category: "統計",
+    title: "ベイズの定理",
+    body: "事前確率と尤度から事後確率を更新する規則です。条件付き確率の向きを反転させます。",
+    code: "posterior = likelihood * prior / evidence"
+  },
+  {
+    category: "統計",
+    title: "中心極限定理",
+    body: "独立同分布な標本の平均は、標本数が大きいと元分布によらず正規分布へ近づきます。",
+    code: "sample_means = [np.mean(np.random.exponential(1, 50)) for _ in range(5000)]"
+  },
+  {
     category: "数学",
     title: "偏微分と勾配",
     body: "多変数関数で各変数方向の変化率を並べたものが勾配です。損失を最も増やす方向を表すため、最小化では逆方向へ進みます。",
@@ -717,6 +807,78 @@ const quizItems = [
     correct: 0,
     explain: "GVAEはVAEの考え方をグラフに適用します。エンコーダでノードの潜在分布を推定し、内積デコーダなどで隣接行列やリンク確率を再構成します。",
     code: "Z = mu + np.exp(0.5 * log_var) * eps\nA_prob = sigmoid(Z @ Z.T)\nloss = recon_bce + kl_loss"
+  },
+  {
+    category: "Python",
+    type: "選択問題",
+    question: "配列xに対するx[2:8:2]が表すものはどれか。",
+    answers: ["index 2から7までを2個おきに取得する", "index 2から8までを全て取得する", "先頭2個と末尾8個を取得する"],
+    correct: 0,
+    explain: "スライスはstartを含みstopを含みません。したがってindex 2, 4, 6を取得します。stepが負なら逆方向へ進みます。",
+    code: "x = np.arange(10)\nresult = x[2:8:2]  # [2, 4, 6]"
+  },
+  {
+    category: "NumPy",
+    type: "選択問題",
+    question: "shape (32, 10) のXとshape (10,) のbiasをX + biasで加算できる理由はどれか。",
+    answers: ["末尾次元10が一致し、biasがバッチ方向へブロードキャストされる", "NumPyがbiasをランダムに32個作る", "行列積として計算される"],
+    correct: 0,
+    explain: "ブロードキャストは末尾次元から比較します。(32,10)と(10,)は末尾の10が一致するため、biasが各行に加算されます。",
+    code: "X = np.zeros((32, 10))\nbias = np.arange(10)\nY = X + bias"
+  },
+  {
+    category: "NumPy",
+    type: "穴埋め",
+    question: "列ごとの平均をshape (1, d)で保持するコードの空欄に入るものはどれか。",
+    codePrompt: "mean = X.mean(axis=0, ____)",
+    accepted: ["keepdims=True", "keepdims = True"],
+    explain: "axis=0で行方向を集約し、keepdims=Trueで集約した軸を長さ1として残します。X - meanを安全にブロードキャストできます。",
+    code: "mean = X.mean(axis=0, keepdims=True)\nX_centered = X - mean"
+  },
+  {
+    category: "Pandas",
+    type: "選択問題",
+    question: "訓練データと検証データの欠損値を中央値で補完するとき、正しい手順はどれか。",
+    answers: ["訓練データだけで中央値を求め、両方に適用する", "検証データを含めて中央値を求める", "正解ラベルごとに検証データの中央値を求める"],
+    correct: 0,
+    explain: "検証データの情報を前処理に使うとデータリークになります。補完値は訓練データだけでfitし、検証・テストへtransformします。",
+    code: "median = train['age'].median()\ntrain['age'] = train['age'].fillna(median)\nvalid['age'] = valid['age'].fillna(median)"
+  },
+  {
+    category: "統計",
+    type: "選択問題",
+    question: "相関係数について正しい説明はどれか。",
+    answers: ["線形な関連の強さを-1から1で表すが、因果関係を保証しない", "常に0以上である", "変数の単位を変えると必ず符号が反転する"],
+    correct: 0,
+    explain: "相関係数は共分散を標準偏差で正規化したものです。強い相関があっても、交絡や逆因果があるため因果関係とは限りません。",
+    code: "corr = np.corrcoef(x, y)[0, 1]"
+  },
+  {
+    category: "確率分布",
+    type: "選択問題",
+    question: "二項分布Binomial(n, p)の期待値と分散の組み合わせはどれか。",
+    answers: ["期待値np、分散np(1-p)", "期待値p、分散p^2", "期待値n+p、分散n-p"],
+    correct: 0,
+    explain: "独立なn回のベルヌーイ試行の和なので、期待値はnp、分散はnp(1-p)です。",
+    code: "mean = n * p\nvariance = n * p * (1 - p)"
+  },
+  {
+    category: "統計",
+    type: "選択問題",
+    question: "中心極限定理が近似する対象として最も適切なものはどれか。",
+    answers: ["十分大きな標本における標本平均の分布", "元データの分布そのもの", "全ての確率変数の最大値"],
+    correct: 0,
+    explain: "中心極限定理は、一定の条件下で標本平均を標準化した分布が正規分布へ近づくことを述べます。元の観測値自体が正規分布になるわけではありません。",
+    code: "sample_means = [np.mean(np.random.exponential(1, 50)) for _ in range(5000)]"
+  },
+  {
+    category: "統計",
+    type: "選択問題",
+    question: "ベイズの定理におけるP(B|A)の役割はどれか。",
+    answers: ["仮説Aのもとで観測Bが得られる尤度", "観測後の事後確率P(A|B)", "必ず1になる周辺確率"],
+    correct: 0,
+    explain: "P(B|A)は尤度、P(A)は事前確率、P(B)は周辺尤度、P(A|B)は事後確率です。",
+    code: "posterior = likelihood * prior / evidence"
   }
 ];
 
@@ -894,6 +1056,21 @@ function slugifyTerm(title) {
 
 function getFormulaForConcept(concept) {
   const formulas = {
+    "スライス": "\\displaystyle x[a:b:s]=(x_a,x_{a+s},x_{a+2s},\\ldots),\\quad i<b",
+    "ブロードキャスト": "\\displaystyle (m,n)+(n)\\longrightarrow(m,n)",
+    "np.dotと行列積": "\\displaystyle C_{ij}=\\sum_{k=1}^{d}A_{ik}B_{kj}",
+    "axisとkeepdims": "\\displaystyle \\mu_j=\\frac{1}{N}\\sum_{i=1}^{N}x_{ij},\\quad X-\\mu\\in\\mathbb{R}^{N\\times d}",
+    "Boolean Indexing": "\\displaystyle X_M=\\{x_i\\mid M_i=\\mathrm{True}\\}",
+    "DataFrameとSeries": "\\displaystyle \\mathrm{DataFrame}=[S_1,S_2,\\ldots,S_p]",
+    "groupbyと集約": "\\displaystyle \\bar{x}_g=\\frac{1}{n_g}\\sum_{i:G_i=g}x_i",
+    "mergeとjoin": "\\displaystyle R=L\\bowtie_{L.key=R.key}R",
+    "欠損値処理": "\\displaystyle x_i'=\\begin{cases}x_i & x_i\\neq NaN\\\\\\tilde{x}_{train} & x_i=NaN\\end{cases}",
+    "期待値と分散": "\\displaystyle \\mathbb{E}[X]=\\sum_x xp(x),\\quad \\mathrm{Var}(X)=\\mathbb{E}[(X-\\mathbb{E}[X])^2]",
+    "共分散と相関係数": "\\displaystyle \\mathrm{Cov}(X,Y)=\\mathbb{E}[(X-\\mu_X)(Y-\\mu_Y)],\\quad \\rho=\\frac{\\mathrm{Cov}(X,Y)}{\\sigma_X\\sigma_Y}",
+    "ベルヌーイ分布と二項分布": "\\displaystyle P(X=x)=p^x(1-p)^{1-x},\\quad P(K=k)={n\\choose k}p^k(1-p)^{n-k}",
+    "正規分布": "\\displaystyle f(x)=\\frac{1}{\\sqrt{2\\pi\\sigma^2}}\\exp\\left(-\\frac{(x-\\mu)^2}{2\\sigma^2}\\right)",
+    "ベイズの定理": "\\displaystyle P(A|B)=\\frac{P(B|A)P(A)}{P(B)}",
+    "中心極限定理": "\\displaystyle \\frac{\\sqrt{n}(\\bar{X}_n-\\mu)}{\\sigma}\\xrightarrow{d}\\mathcal{N}(0,1)",
     "偏微分と勾配": "\\displaystyle \\nabla_w L=\\left[\\frac{\\partial L}{\\partial w_1},\\ldots,\\frac{\\partial L}{\\partial w_n}\\right]",
     "連鎖律": "\\displaystyle \\frac{\\partial z}{\\partial x}=\\frac{\\partial z}{\\partial y}\\frac{\\partial y}{\\partial x}",
     "エントロピー": "\\displaystyle H(p)=-\\sum_x p(x)\\log p(x)",
@@ -990,6 +1167,21 @@ function getAnswerGuide(concept) {
 }
 
 const termStudyPoints = {
+  "スライス": ["startは含みstopは含まない", "負のindexとstepを説明する", "NumPyスライスはビューになり得る点に注意する"],
+  "ブロードキャスト": ["末尾の次元から互換性を判定する", "次元が同じか片方が1なら拡張できる", "意図しない巨大配列生成やshapeミスに注意する"],
+  "np.dotと行列積": ["1次元と2次元で意味が変わる", "行列積では内側の次元を一致させる", "高次元ではnp.matmulやeinsumとの違いを確認する"],
+  "axisとkeepdims": ["axisは消える軸を指定する", "keepdims=Trueでブロードキャスト可能なshapeを保つ", "BatchNormなどの正規化軸と結び付ける"],
+  "Boolean Indexing": ["比較演算でbool maskを作る", "mask shapeと対象配列のshapeを合わせる", "抽出結果はコピーになることが多い"],
+  "DataFrameとSeries": ["indexとcolumnsによるラベル整列を理解する", "列ごとにdtypeを持てる", "NumPy配列へ変換すると型が統一される点に注意する"],
+  "groupbyと集約": ["split-apply-combineとして説明する", "aggで複数統計量を同時に計算する", "group keyがindexになる場合を確認する"],
+  "mergeとjoin": ["innerとleftの行数の違いを説明する", "キー重複で行数が増えることに注意する", "validate引数で結合関係を検査する"],
+  "欠損値処理": ["欠損の発生機構を考える", "補完値は訓練データだけから推定する", "欠損フラグ自体が特徴になる場合を理解する"],
+  "期待値と分散": ["離散分布と連続分布の定義を使い分ける", "Var(X)=E[X^2]-E[X]^2も導ける", "標本分散ではddof=1を使う理由を理解する"],
+  "共分散と相関係数": ["共分散は単位に依存する", "相関係数は-1から1に正規化される", "相関は因果を意味しない"],
+  "ベルヌーイ分布と二項分布": ["ベルヌーイは1試行、二項はn試行の成功回数", "期待値npと分散np(1-p)を説明する", "独立試行の仮定を確認する"],
+  "正規分布": ["平均が位置、分散が広がりを決める", "標準化z=(x-mu)/sigmaを説明する", "標準偏差と分散を混同しない"],
+  "ベイズの定理": ["事前・尤度・周辺尤度・事後を区別する", "条件付き確率の向きを反転する", "事後は尤度×事前に比例すると説明する"],
+  "中心極限定理": ["元分布が正規分布でなくても標本平均へ適用できる", "対象は個々の観測値ではなく標本平均の分布", "標準誤差がsigma/sqrt(n)になる"],
   "偏微分と勾配": ["どの変数で微分しているかを明確にする", "勾配は損失が増える方向なので更新は逆向き", "ベクトル化した実装ではshapeを確認する"],
   "連鎖律": ["合成関数の局所微分を掛け合わせる", "誤差逆伝播の中心原理として説明する", "計算グラフ上で上流勾配と局所勾配を分ける"],
   "エントロピー": ["不確実性の大きさを表す", "確率が偏るほど小さく一様に近いほど大きい", "交差エントロピーとの違いを説明する"],
@@ -1041,6 +1233,134 @@ const termStudyPoints = {
 };
 
 const numpySamples = {
+  "スライス": `import numpy as np
+
+class SliceExamples:
+    def run(self):
+        x = np.arange(12).reshape(3, 4)
+        rows = x[1:]
+        every_other_column = x[:, ::2]
+        reversed_rows = x[::-1]
+        copied = x[:, 1:3].copy()
+        return rows, every_other_column, reversed_rows, copied`,
+  "ブロードキャスト": `import numpy as np
+
+class BroadcastingExample:
+    def center_columns(self, X):
+        mean = X.mean(axis=0, keepdims=True)
+        return X - mean
+
+    def add_bias(self, X, bias):
+        assert X.shape[-1] == bias.shape[0]
+        return X + bias`,
+  "np.dotと行列積": `import numpy as np
+
+class MatrixProduct:
+    def linear(self, X, W, b):
+        assert X.shape[1] == W.shape[0]
+        return X @ W + b
+
+    def vector_dot(self, a, b):
+        return np.dot(a, b)`,
+  "axisとkeepdims": `import numpy as np
+
+class AxisExamples:
+    def statistics(self, X):
+        column_mean = X.mean(axis=0, keepdims=True)
+        row_sum = X.sum(axis=1, keepdims=True)
+        global_max = X.max()
+        return column_mean, row_sum, global_max`,
+  "Boolean Indexing": `import numpy as np
+
+class BooleanIndexing:
+    def filter_valid(self, X):
+        mask = np.isfinite(X).all(axis=1)
+        return X[mask]
+
+    def clip_negative(self, X):
+        result = X.copy()
+        result[result < 0] = 0
+        return result`,
+  "DataFrameとSeries": `import pandas as pd
+
+class FrameExample:
+    def build(self):
+        df = pd.DataFrame({"feature": [1.2, 2.4], "label": [0, 1]})
+        feature_series = df["feature"]
+        feature_matrix = df[["feature"]].to_numpy(dtype="float32")
+        return df, feature_series, feature_matrix`,
+  "groupbyと集約": `import pandas as pd
+
+class GroupSummary:
+    def summarize(self, df):
+        return (
+            df.groupby("class", as_index=False)
+              .agg(score_mean=("score", "mean"), score_std=("score", "std"), count=("score", "size"))
+        )`,
+  "mergeとjoin": `import pandas as pd
+
+class TableMerger:
+    def merge_features(self, users, scores):
+        return users.merge(
+            scores,
+            on="user_id",
+            how="left",
+            validate="one_to_many"
+        )`,
+  "欠損値処理": `import pandas as pd
+
+class MedianImputer:
+    def fit(self, train, column):
+        self.column = column
+        self.value = train[column].median()
+        return self
+
+    def transform(self, df):
+        out = df.copy()
+        out[self.column + "_missing"] = out[self.column].isna().astype(int)
+        out[self.column] = out[self.column].fillna(self.value)
+        return out`,
+  "期待値と分散": `import numpy as np
+
+class DiscreteMoments:
+    def compute(self, values, probabilities):
+        probabilities = probabilities / probabilities.sum()
+        mean = np.sum(values * probabilities)
+        variance = np.sum((values - mean) ** 2 * probabilities)
+        return mean, variance`,
+  "共分散と相関係数": `import numpy as np
+
+class DependenceMeasures:
+    def compute(self, x, y):
+        covariance = np.cov(x, y, ddof=1)[0, 1]
+        correlation = np.corrcoef(x, y)[0, 1]
+        return covariance, correlation`,
+  "ベルヌーイ分布と二項分布": `import numpy as np
+
+class BernoulliBinomial:
+    def sample(self, p=0.7, trials=10, size=1000):
+        bernoulli = np.random.binomial(1, p, size=size)
+        binomial = np.random.binomial(trials, p, size=size)
+        return bernoulli, binomial`,
+  "正規分布": `import numpy as np
+
+class NormalDistribution:
+    def sample_and_standardize(self, mean=5.0, std=2.0, size=1000):
+        x = np.random.normal(mean, std, size)
+        z = (x - mean) / std
+        return x, z`,
+  "ベイズの定理": `class BayesRule:
+    def posterior(self, prior, sensitivity, false_positive_rate):
+        evidence = sensitivity * prior + false_positive_rate * (1 - prior)
+        return sensitivity * prior / evidence`,
+  "中心極限定理": `import numpy as np
+
+class CentralLimitSimulation:
+    def sample_means(self, repetitions=5000, sample_size=50):
+        return np.array([
+            np.mean(np.random.exponential(scale=1.0, size=sample_size))
+            for _ in range(repetitions)
+        ])`,
   "Adam": `import numpy as np
 
 class AdamOptimizer:
@@ -1580,6 +1900,90 @@ class RocPoints:
 };
 
 const torchSamples = {
+  "スライス": `import torch
+
+x = torch.arange(12).reshape(3, 4)
+rows = x[1:]
+every_other_column = x[:, ::2]
+reversed_rows = torch.flip(x, dims=[0])`,
+  "ブロードキャスト": `import torch
+
+X = torch.randn(8, 3)
+bias = torch.tensor([1.0, 2.0, 3.0])
+Y = X + bias`,
+  "np.dotと行列積": `import torch
+
+X = torch.randn(16, 8)
+W = torch.randn(8, 4)
+b = torch.zeros(4)
+Y = torch.matmul(X, W) + b`,
+  "axisとkeepdims": `import torch
+
+X = torch.randn(16, 8)
+column_mean = X.mean(dim=0, keepdim=True)
+row_sum = X.sum(dim=1, keepdim=True)
+X_centered = X - column_mean`,
+  "Boolean Indexing": `import torch
+
+x = torch.randn(10)
+positive = x[x > 0]
+clipped = x.clone()
+clipped[clipped < 0] = 0`,
+  "DataFrameとSeries": `import pandas as pd
+import torch
+
+df = pd.DataFrame({"x": [1.0, 2.0], "label": [0, 1]})
+features = torch.tensor(df[["x"]].to_numpy(), dtype=torch.float32)
+labels = torch.tensor(df["label"].to_numpy(), dtype=torch.long)`,
+  "groupbyと集約": `import pandas as pd
+import torch
+
+summary = df.groupby("class", as_index=False)["score"].mean()
+group_means = torch.tensor(summary["score"].to_numpy(), dtype=torch.float32)`,
+  "mergeとjoin": `import pandas as pd
+import torch
+
+merged = users.merge(scores, on="user_id", how="left", validate="one_to_many")
+features = torch.tensor(merged[feature_columns].to_numpy(), dtype=torch.float32)`,
+  "欠損値処理": `import pandas as pd
+import torch
+
+median = train["age"].median()
+train["age"] = train["age"].fillna(median)
+X = torch.tensor(train[["age"]].to_numpy(), dtype=torch.float32)`,
+  "期待値と分散": `import torch
+
+values = torch.tensor([0.0, 1.0, 2.0])
+prob = torch.tensor([0.2, 0.5, 0.3])
+mean = (values * prob).sum()
+variance = ((values - mean) ** 2 * prob).sum()`,
+  "共分散と相関係数": `import torch
+
+X = torch.randn(100, 2)
+covariance_matrix = torch.cov(X.T)
+correlation_matrix = torch.corrcoef(X.T)`,
+  "ベルヌーイ分布と二項分布": `import torch
+
+bernoulli = torch.distributions.Bernoulli(probs=0.7)
+binomial = torch.distributions.Binomial(total_count=10, probs=0.7)
+x = bernoulli.sample((1000,))
+k = binomial.sample((1000,))`,
+  "正規分布": `import torch
+
+normal = torch.distributions.Normal(loc=0.0, scale=1.0)
+x = normal.sample((1000,))
+log_prob = normal.log_prob(x)`,
+  "ベイズの定理": `import torch
+
+prior = torch.tensor(0.01)
+sensitivity = torch.tensor(0.95)
+false_positive = torch.tensor(0.05)
+evidence = sensitivity * prior + false_positive * (1 - prior)
+posterior = sensitivity * prior / evidence`,
+  "中心極限定理": `import torch
+
+samples = torch.distributions.Exponential(1.0).sample((5000, 50))
+sample_means = samples.mean(dim=1)`,
   "Adam": `import torch
 import torch.nn as nn
 
