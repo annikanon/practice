@@ -346,6 +346,27 @@ button {
   font-weight: 900;
 }
 
+.execution-demo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.execution-demo > div {
+  min-width: 0;
+}
+
+.execution-demo p {
+  margin: 10px 0 0;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.execution-demo .sample-title {
+  margin: 0 0 8px;
+  color: var(--ink);
+}
+
 .math-formula {
   overflow-x: auto;
   padding: 18px;
@@ -457,6 +478,55 @@ input[type="range"] {
 
 .quiz {
   max-width: 980px;
+}
+
+.quiz-browser {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.quiz-browser label {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.quiz-browser select {
+  min-height: 44px;
+  width: 100%;
+  padding: 0 12px;
+  color: var(--ink);
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font: inherit;
+}
+
+.question-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+  gap: 7px;
+  max-height: 150px;
+  margin-bottom: 18px;
+  overflow-y: auto;
+}
+
+.question-number {
+  min-height: 40px;
+  padding: 0;
+  color: var(--ink);
+  background: #ffffff;
+  border-color: var(--line);
+}
+
+.question-number.active {
+  color: #ffffff;
+  background: var(--teal);
+  border-color: var(--teal);
 }
 
 .quiz-meta {
@@ -636,6 +706,14 @@ footer {
   }
 
   .fill-answer {
+    grid-template-columns: 1fr;
+  }
+
+  .quiz-browser {
+    grid-template-columns: 1fr;
+  }
+
+  .execution-demo {
     grid-template-columns: 1fr;
   }
 }

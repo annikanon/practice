@@ -879,6 +879,96 @@ const quizItems = [
     correct: 0,
     explain: "P(B|A)は尤度、P(A)は事前確率、P(B)は周辺尤度、P(A|B)は事後確率です。",
     code: "posterior = likelihood * prior / evidence"
+  },
+  {
+    category: "数学",
+    type: "選択問題",
+    question: "対称行列の固有値分解について正しいものはどれか。",
+    answers: ["実固有値と互いに直交する固有ベクトルを持つ", "固有値は必ず複素数のみになる", "正方行列でなくても同じ形で固有値分解できる"],
+    correct: 0,
+    explain: "実対称行列AはA=QΛQ^Tと直交対角化できます。共分散行列の主成分分析で重要です。",
+    code: "eigenvalues, eigenvectors = np.linalg.eigh(covariance_matrix)"
+  },
+  {
+    category: "数学",
+    type: "選択問題",
+    question: "特異値分解 X=UΣV^T のVの列がPCAで表すものはどれか。",
+    answers: ["特徴空間における主成分方向", "各標本の正解ラベル", "損失関数の学習率"],
+    correct: 0,
+    explain: "中心化したデータ行列の右特異ベクトルは、特徴空間の主成分方向です。特異値の二乗は各方向の分散と関係します。",
+    code: "U, S, Vt = np.linalg.svd(X_centered, full_matrices=False)\ncomponents = Vt[:k]"
+  },
+  {
+    category: "正規化",
+    type: "選択問題",
+    question: "入力shapeが(N,C,H,W)のBatchNorm2dで、チャネルごとの平均・分散を計算する軸はどれか。",
+    answers: ["N,H,W", "Cのみ", "N,C,H,Wすべて"],
+    correct: 0,
+    explain: "BatchNorm2dはチャネルCごとに統計量を持ち、各チャネルについてバッチ・高さ・幅のN,H,W方向で平均分散を計算します。",
+    code: "mean = x.mean(axis=(0, 2, 3), keepdims=True)"
+  },
+  {
+    category: "CNN",
+    type: "選択問題",
+    question: "Conv2d(3, 64, kernel_size=3, bias=True)のパラメータ数はいくつか。",
+    answers: ["64×3×3×3 + 64 = 1792", "3×3 = 9", "64×64×3×3 = 36864"],
+    correct: 0,
+    explain: "各出力チャネルは3入力チャネル分の3×3カーネルを持ち、さらにbiasを1つ持ちます。",
+    code: "params = out_c * in_c * kernel_h * kernel_w + out_c"
+  },
+  {
+    category: "CNN",
+    type: "選択問題",
+    question: "stride 1の3×3畳み込みを2層重ねたときの理論上の受容野はどれか。",
+    answers: ["5×5", "6×6", "9×9"],
+    correct: 0,
+    explain: "最初の3×3出力の1点は入力3×3を見る。次の3×3はその周囲をさらに1ずつ広げるため、受容野は5×5になります。",
+    code: "receptive_field = 1 + 2 * (kernel_size - 1)  # 5"
+  },
+  {
+    category: "Attention",
+    type: "選択問題",
+    question: "標準Self-Attentionの系列長nに対する主要な計算量はどれか。",
+    answers: ["O(n^2 d)", "O(n d)のみ", "O(log n)"],
+    correct: 0,
+    explain: "QK^Tでn×nのAttentionスコアを作るため、系列長に対して二次の計算・メモリが必要です。",
+    code: "scores = Q @ K.transpose(-2, -1)  # (..., n, n)"
+  },
+  {
+    category: "Transformer",
+    type: "選択問題",
+    question: "Label Smoothingの効果として適切なものはどれか。",
+    answers: ["one-hot正解を少し平滑化し、過度に自信のある予測を抑える", "全てのラベルを同じクラスへ変更する", "系列長を半分にする"],
+    correct: 0,
+    explain: "正解クラスを1、他を0とせず少量の確率を他クラスへ分配し、過信を抑えて汎化を改善することがあります。",
+    code: "smoothed = one_hot * (1 - eps) + eps / num_classes"
+  },
+  {
+    category: "系列",
+    type: "選択問題",
+    question: "Teacher Forcingの学習時と推論時の差によって生じる問題はどれか。",
+    answers: ["Exposure Bias", "Internal Covariate Shiftだけ", "モード崩壊のみ"],
+    correct: 0,
+    explain: "学習時は正解の前トークンを入力しますが、推論時は自分の予測を入力するため、誤差が蓄積するExposure Biasが生じます。",
+    code: "decoder_input = target_prev if training else predicted_prev"
+  },
+  {
+    category: "生成モデル",
+    type: "選択問題",
+    question: "VAEでKL項を強くしすぎた場合に起き得ることはどれか。",
+    answers: ["潜在変数が入力情報を持たなくなるPosterior Collapse", "畳み込みの出力が必ず大きくなる", "正解ラベルが増える"],
+    correct: 0,
+    explain: "q(z|x)が事前分布p(z)へ強く近づきすぎると、zがxの情報を使わなくなるPosterior Collapseが起き得ます。",
+    code: "loss = recon_loss + beta * kl_loss"
+  },
+  {
+    category: "GNN",
+    type: "選択問題",
+    question: "GNNで層を深くしすぎたときのOver-smoothingとは何か。",
+    answers: ["ノード表現が似通い、識別しにくくなる", "全エッジが必ず削除される", "隣接行列が非正方になる"],
+    correct: 0,
+    explain: "近傍集約を繰り返すと、連結したノードの表現が混ざり続け、最終的に似た埋め込みへ収束しやすくなります。",
+    code: "H = A_norm @ H @ W  # repeated propagation can smooth node features"
   }
 ];
 
@@ -901,10 +991,14 @@ const codePrompt = document.querySelector("#codePrompt");
 const answerList = document.querySelector("#answerList");
 const fillAnswer = document.querySelector("#fillAnswer");
 const quizResult = document.querySelector("#quizResult");
+const quizCategory = document.querySelector("#quizCategory");
+const quizSelect = document.querySelector("#quizSelect");
+const questionGrid = document.querySelector("#questionGrid");
 const prevQuestion = document.querySelector("#prevQuestion");
 const nextQuestion = document.querySelector("#nextQuestion");
 
 let currentQuiz = 0;
+let filteredQuizIndexes = quizItems.map((_, index) => index);
 
 const termDetails = {
   "畳み込み": {
@@ -2609,6 +2703,57 @@ y = x + 0
 y.backward()`;
 }
 
+function getExecutionDemo(concept) {
+  const demos = {
+    "スライス": {
+      code: "x = np.arange(10)\nprint(x[2:8:2])",
+      output: "[2 4 6]",
+      explanation: "index 2から開始し、stopの8は含めず、2つおきに要素を取得します。"
+    },
+    "np.dotと行列積": {
+      code: "X = np.array([[1, 2], [3, 4]])\nW = np.array([[2], [1]])\nprint(X @ W)",
+      output: "[[ 4]\n [10]]",
+      explanation: "各行とWの列の内積を計算します。1行目は1×2+2×1=4、2行目は3×2+4×1=10です。"
+    },
+    "ブロードキャスト": {
+      code: "X = np.array([[1, 2, 3], [4, 5, 6]])\nb = np.array([10, 20, 30])\nprint(X + b)",
+      output: "[[11 22 33]\n [14 25 36]]",
+      explanation: "shape (3,) のbが各行へ暗黙に拡張され、列ごとに同じ値が加算されます。"
+    },
+    "期待値と分散": {
+      code: "values = np.array([0, 1, 2])\np = np.array([0.2, 0.5, 0.3])\nprint(np.sum(values * p))",
+      output: "1.1",
+      explanation: "各値をその確率で重み付けして合計し、確率変数の平均的位置を求めます。"
+    },
+    "正規分布": {
+      code: "x = np.random.default_rng(0).normal(5, 2, 100000)\nprint(round(x.mean(), 2), round(x.std(), 2))",
+      output: "約 5.00 2.00",
+      explanation: "標本数を十分大きくすると、標本平均と標準偏差が指定した母平均5、母標準偏差2へ近づきます。"
+    },
+    "Softmax": {
+      code: "logits = np.array([2.0, 1.0, 0.0])\nz = logits - logits.max()\np = np.exp(z) / np.exp(z).sum()\nprint(np.round(p, 3), p.sum())",
+      output: "[0.665 0.245 0.090] 1.0",
+      explanation: "大きいロジットほど高い確率になります。出力は非負で、全クラスの合計は1です。"
+    },
+    "畳み込み": {
+      code: "x = np.array([[1,2,0],[0,1,3],[2,1,0]])\nk = np.array([[1,0],[0,-1]])\nprint(np.sum(x[:2,:2] * k))",
+      output: "0",
+      explanation: "左上2×2領域とカーネルを要素積し、合計して1つの特徴値を作ります。カーネルを滑らせて出力マップを得ます。"
+    },
+    "GCN": {
+      code: "A_hat = A + np.eye(A.shape[0])\nH_next = D_inv_sqrt @ A_hat @ D_inv_sqrt @ X @ W\nprint(H_next.shape)",
+      output: "(ノード数, 出力特徴数)",
+      explanation: "各ノードの特徴に、正規化された自己特徴と近傍特徴が混ざり、ノードごとの新しい埋め込みが得られます。"
+    }
+  };
+
+  return demos[concept.title] || {
+    code: concept.code,
+    output: `${concept.title}に対応する変換後の値・損失・埋め込み・統計量が得られます。`,
+    explanation: `${concept.body} 入力配列のshapeを確認し、処理前後でどの軸・値・表現が変わったかを比較してください。`
+  };
+}
+
 function getTermDetail(concept) {
   const detail = termDetails[concept.title] || {
     formula: getFormulaForConcept(concept),
@@ -2622,7 +2767,8 @@ function getTermDetail(concept) {
     points: termStudyPoints[concept.title] || detail.points,
     numpyCode: detail.numpyCode || getNumpySample(concept),
     torchCode: detail.torchCode || getTorchSample(concept),
-    answerGuide: detail.answerGuide || getAnswerGuide(concept)
+    answerGuide: detail.answerGuide || getAnswerGuide(concept),
+    executionDemo: detail.executionDemo || getExecutionDemo(concept)
   };
 }
 
@@ -2735,6 +2881,20 @@ function renderTermDetailFromHash() {
         <pre><code>${escapeHtml(detail.torchCode)}</code></pre>
       </section>
       <section class="detail-block detail-wide">
+        <h3>実行例と得られる結果</h3>
+        <div class="execution-demo">
+          <div>
+            <p class="sample-title">入力・実行</p>
+            <pre><code>${escapeHtml(detail.executionDemo.code)}</code></pre>
+          </div>
+          <div>
+            <p class="sample-title">結果</p>
+            <pre><code>${escapeHtml(detail.executionDemo.output)}</code></pre>
+            <p>${detail.executionDemo.explanation}</p>
+          </div>
+        </div>
+      </section>
+      <section class="detail-block detail-wide">
         <h3>試験で押さえるポイント</h3>
         <ul>
           ${detail.points.map((point) => `<li>${point}</li>`).join("")}
@@ -2838,9 +2998,47 @@ function normalizeAnswer(value) {
   return value.replace(/\s+/g, "").toLowerCase();
 }
 
+function initializeQuizBrowser() {
+  const categories = ["すべて", ...new Set(quizItems.map((item) => item.category))];
+  quizCategory.innerHTML = categories.map((category) => `<option value="${category}">${category}</option>`).join("");
+  updateQuizBrowser();
+}
+
+function updateQuizBrowser() {
+  const category = quizCategory.value || "すべて";
+  filteredQuizIndexes = quizItems
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => category === "すべて" || item.category === category)
+    .map(({ index }) => index);
+
+  if (!filteredQuizIndexes.includes(currentQuiz)) {
+    currentQuiz = filteredQuizIndexes[0] ?? 0;
+  }
+
+  quizSelect.innerHTML = filteredQuizIndexes.map((index) => {
+    const item = quizItems[index];
+    return `<option value="${index}">Q${index + 1}: ${item.question}</option>`;
+  }).join("");
+  quizSelect.value = String(currentQuiz);
+
+  questionGrid.innerHTML = filteredQuizIndexes.map((index) => `
+    <button class="question-number ${index === currentQuiz ? "active" : ""}" type="button" data-index="${index}" title="${quizItems[index].question}">
+      ${index + 1}
+    </button>
+  `).join("");
+
+  questionGrid.querySelectorAll(".question-number").forEach((button) => {
+    button.addEventListener("click", () => {
+      currentQuiz = Number(button.dataset.index);
+      renderQuiz();
+    });
+  });
+}
+
 function renderQuiz() {
   const item = quizItems[currentQuiz];
-  questionCounter.textContent = `${currentQuiz + 1} / ${quizItems.length}`;
+  const filteredPosition = filteredQuizIndexes.indexOf(currentQuiz);
+  questionCounter.textContent = `Q${currentQuiz + 1} / 全${quizItems.length}問（絞り込み ${filteredPosition + 1}/${filteredQuizIndexes.length}）`;
   questionType.textContent = `${item.category} / ${item.type}`;
   questionText.textContent = item.question;
   codePrompt.textContent = item.codePrompt || "";
@@ -2881,12 +3079,15 @@ function renderQuiz() {
     fillAnswer.append(input, button);
   }
 
-  prevQuestion.disabled = currentQuiz === 0;
-  nextQuestion.disabled = currentQuiz === quizItems.length - 1;
+  quizSelect.value = String(currentQuiz);
+  updateQuizBrowser();
+  prevQuestion.disabled = filteredPosition <= 0;
+  nextQuestion.disabled = filteredPosition === -1 || filteredPosition >= filteredQuizIndexes.length - 1;
 }
 
 renderRoadmap();
 renderConcepts();
+initializeQuizBrowser();
 renderQuiz();
 updateExperiment();
 renderTermDetailFromHash();
@@ -2895,11 +3096,21 @@ learningRate.addEventListener("input", updateExperiment);
 epochs.addEventListener("input", updateExperiment);
 runExperiment.addEventListener("click", updateExperiment);
 window.addEventListener("hashchange", renderTermDetailFromHash);
+quizCategory.addEventListener("change", () => {
+  updateQuizBrowser();
+  renderQuiz();
+});
+quizSelect.addEventListener("change", () => {
+  currentQuiz = Number(quizSelect.value);
+  renderQuiz();
+});
 prevQuestion.addEventListener("click", () => {
-  currentQuiz = Math.max(0, currentQuiz - 1);
+  const position = filteredQuizIndexes.indexOf(currentQuiz);
+  currentQuiz = filteredQuizIndexes[Math.max(0, position - 1)];
   renderQuiz();
 });
 nextQuestion.addEventListener("click", () => {
-  currentQuiz = Math.min(quizItems.length - 1, currentQuiz + 1);
+  const position = filteredQuizIndexes.indexOf(currentQuiz);
+  currentQuiz = filteredQuizIndexes[Math.min(filteredQuizIndexes.length - 1, position + 1)];
   renderQuiz();
 });
