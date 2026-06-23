@@ -22,6 +22,32 @@ const roadmap = [
 ];
 
 const concepts = [
+  { category: "学習パラダイム", title: "教師あり学習", body: "入力Xと正解ラベルyの組から写像を学び、未知データの回帰値やクラスを予測します。", code: "model.fit(X_train, y_train)\npred = model.predict(X_test)" },
+  { category: "学習パラダイム", title: "教師なし学習", body: "正解ラベルを使わず、データの構造、クラスタ、低次元表現、異常を発見します。", code: "clusters = kmeans(X)\nembedding = pca(X)" },
+  { category: "学習パラダイム", title: "半教師あり学習", body: "少量のラベル付きデータと大量の未ラベルデータを組み合わせます。Pseudo Labelなどが代表例です。", code: "pseudo_y = model.predict(X_unlabeled)\nX_all = np.r_[X_labeled, X_unlabeled]" },
+  { category: "学習パラダイム", title: "自己教師あり学習", body: "データ自身から監督信号を作り、事前学習で汎用表現を獲得します。Contrastive LearningやMasked Modelingが代表例です。", code: "loss = contrastive_loss(encoder(view1), encoder(view2))" },
+  { category: "学習パラダイム", title: "強化学習", body: "Agentが環境と相互作用し、累積報酬を最大化する方策を学びます。状態・行動・報酬・遷移で考えます。", code: "Q[s, a] += alpha * (r + gamma * Q[next_s].max() - Q[s, a])" },
+  { category: "古典モデル", title: "線形回帰", body: "説明変数の線形結合で連続値を予測します。最小二乗法、残差、決定係数が重要です。", code: "w = np.linalg.pinv(X.T @ X) @ X.T @ y" },
+  { category: "古典モデル", title: "ロジスティック回帰", body: "線形結合をsigmoidへ通し、二値クラスの確率を推定する線形分類器です。", code: "prob = 1 / (1 + np.exp(-(X @ w + b)))" },
+  { category: "古典モデル", title: "Support Vector Machine", body: "クラス間のマージンを最大化する分類器です。Kernel Trickで非線形境界を扱えます。", code: "margin = y * (X @ w + b)\nhinge = np.maximum(0, 1 - margin)" },
+  { category: "古典モデル", title: "Decision Tree", body: "特徴量の閾値でデータを再帰分割します。Gini不純度や情報利得で分割を選びます。", code: "gini = 1 - np.sum(class_prob ** 2)" },
+  { category: "古典モデル", title: "Random Forest", body: "Bootstrap標本と特徴量サブサンプリングで複数の決定木を作り、予測を平均・多数決します。", code: "prediction = np.mean([tree.predict(X) for tree in trees], axis=0)" },
+  { category: "古典モデル", title: "k-Nearest Neighbors", body: "近いk個の訓練標本を探し、多数決または平均で予測するinstance-based学習です。", code: "nearest = np.argsort(np.linalg.norm(X_train - x, axis=1))[:k]" },
+  { category: "古典モデル", title: "Naive Bayes", body: "特徴量がクラス条件付きで独立と仮定し、ベイズの定理で事後確率を計算します。", code: "log_posterior = log_prior + np.sum(log_likelihood, axis=1)" },
+  { category: "古典モデル", title: "Gradient Boosting", body: "弱学習器を逐次追加し、前段モデルの残差や損失勾配を補正します。", code: "prediction += learning_rate * weak_learner.predict(X)" },
+  { category: "教師なし", title: "k-means", body: "各点を最も近い重心へ割り当て、重心を更新する操作を反復するクラスタリングです。", code: "labels = distances.argmin(axis=1)\ncenters = np.array([X[labels == k].mean(0) for k in range(K)])" },
+  { category: "教師なし", title: "Principal Component Analysis", body: "分散が最大になる直交方向へデータを射影する線形次元削減です。", code: "U, S, Vt = np.linalg.svd(X - X.mean(0), full_matrices=False)\nZ = (X - X.mean(0)) @ Vt[:k].T" },
+  { category: "NumPy実践", title: "reshapeとtranspose", body: "要素数を保ってshapeを変更し、transposeで軸順序を入れ替えます。", code: "x = np.arange(24).reshape(2, 3, 4)\ny = x.transpose(0, 2, 1)" },
+  { category: "NumPy実践", title: "concatenateとstack", body: "concatenateは既存軸で連結し、stackは新しい軸を追加して積み重ねます。", code: "a = np.concatenate([x, y], axis=0)\nb = np.stack([x, y], axis=0)" },
+  { category: "NumPy実践", title: "whereとargsort", body: "whereは条件選択、argsortは並べ替え後のindexを返します。ランキングやTop-k抽出に使います。", code: "clean = np.where(x > 0, x, 0)\ntopk = np.argsort(score)[-k:][::-1]" },
+  { category: "Pandas実践", title: "pivot_table", body: "カテゴリを行・列へ配置し、値を集約してクロス集計表を作ります。", code: "table = df.pivot_table(index='class', columns='month', values='score', aggfunc='mean')" },
+  { category: "Pandas実践", title: "rollingと時系列集計", body: "移動窓で平均・分散などを計算します。時系列では未来データを窓に含めないことが重要です。", code: "df['ma7'] = df['value'].rolling(7, min_periods=1).mean()" },
+  { category: "確率分布", title: "ポアソン分布", body: "一定区間に独立に発生する事象の回数を表します。平均と分散はいずれもλです。", code: "count = np.random.poisson(lam=3.0, size=1000)" },
+  { category: "確率分布", title: "指数分布", body: "ポアソン過程で次の事象までの待ち時間を表します。無記憶性を持ちます。", code: "wait = np.random.exponential(scale=1/lambda_, size=1000)" },
+  { category: "確率分布", title: "一様分布", body: "指定区間内の全ての値が同じ密度を持つ分布です。乱数生成や初期化の基礎です。", code: "x = np.random.uniform(low=a, high=b, size=1000)" },
+  { category: "確率分布", title: "ベータ分布", body: "0から1の確率を表す連続分布で、ベルヌーイ確率の事前分布として使われます。", code: "p = np.random.beta(alpha, beta, size=1000)" },
+  { category: "確率分布", title: "ガンマ分布", body: "正の連続値を表し、待ち時間や分散パラメータの事前分布に使われます。", code: "x = np.random.gamma(shape=k, scale=theta, size=1000)" },
+  { category: "統計", title: "t分布とカイ二乗分布", body: "t分布は母分散未知の平均推定、カイ二乗分布は分散推定や適合度検定に使われます。", code: "t = np.random.standard_t(df=10, size=1000)\nchi2 = np.random.chisquare(df=10, size=1000)" },
   {
     category: "統計",
     title: "ヒストグラムと分布形状",
@@ -1134,6 +1160,111 @@ const quizItems = [
     correct: 0,
     explain: "Calibrationは予測確率と実際の正解頻度の一致度です。Temperature Scalingなどで調整できます。",
     code: "calibrated_prob = softmax(logits / temperature)"
+  },
+  {
+    category: "学習パラダイム", type: "選択問題",
+    question: "教師あり学習に該当するものはどれか。",
+    answers: ["画像と犬・猫ラベルから分類器を学習する", "ラベルなし顧客をクラスタリングする", "報酬からゲーム方策を学習する"], correct: 0,
+    explain: "教師あり学習は入力と正解ラベルの組を使います。分類では離散クラス、回帰では連続値を予測します。",
+    code: "model.fit(X_train, y_train)"
+  },
+  {
+    category: "学習パラダイム", type: "選択問題",
+    question: "自己教師あり学習の特徴として適切なものはどれか。",
+    answers: ["入力データ自身から監督信号を作り表現を事前学習する", "必ず人手ラベルだけを使う", "報酬関数だけを使う"], correct: 0,
+    explain: "Masked Language ModelingやContrastive Learningのように、データから擬似的な正解を構成します。",
+    code: "loss = contrastive_loss(encoder(view1), encoder(view2))"
+  },
+  {
+    category: "強化学習", type: "選択問題",
+    question: "Q-learningの更新式におけるmax_a' Q(s',a')は何を表すか。",
+    answers: ["次状態から最良行動を選んだときの推定将来価値", "現在の即時報酬だけ", "方策のエントロピーだけ"], correct: 0,
+    explain: "Q-learningはoff-policy TD制御で、次状態の最大Q値をbootstrap targetへ使います。",
+    code: "target = reward + gamma * Q[next_state].max()"
+  },
+  {
+    category: "古典モデル", type: "選択問題",
+    question: "SVMでCを大きくすると一般にどうなるか。",
+    answers: ["訓練誤分類への罰則が強くなり、狭いマージンでも訓練データへ合わせやすい", "全ての特徴量が削除される", "カーネルが使用不能になる"], correct: 0,
+    explain: "Cが大きいとmargin violationを強く罰します。過学習とのバランスを検証データで調整します。",
+    code: "loss = 0.5 * np.sum(w**2) + C * hinge.mean()"
+  },
+  {
+    category: "古典モデル", type: "選択問題",
+    question: "Random Forestで木同士の相関を下げる仕組みはどれか。",
+    answers: ["Bootstrap標本と分割時の特徴量サブサンプリング", "全ての木を同一データ・同一特徴で作る", "木を1本だけ使う"], correct: 0,
+    explain: "異なる標本と特徴候補で木を多様化し、平均・多数決によって分散を下げます。",
+    code: "feature_subset = rng.choice(n_features, size=m, replace=False)"
+  },
+  {
+    category: "古典モデル", type: "選択問題",
+    question: "決定木を深くしすぎた場合に起きやすいことはどれか。",
+    answers: ["葉が細分化され訓練データへ過学習する", "必ず線形モデルになる", "全特徴量が同じ重要度になる"], correct: 0,
+    explain: "max_depth、min_samples_leaf、剪定などで複雑さを制御します。",
+    code: "if depth >= max_depth or len(y) < min_samples_leaf: return leaf"
+  },
+  {
+    category: "古典モデル", type: "選択問題",
+    question: "k-NNの前に標準化が重要な理由はどれか。",
+    answers: ["スケールの大きい特徴が距離を支配するのを防ぐ", "木の深さを減らす", "ラベルを連続値へ変える"], correct: 0,
+    explain: "k-NNは距離を直接使うため、単位やスケールが結果に強く影響します。",
+    code: "X_scaled = (X - train_mean) / train_std"
+  },
+  {
+    category: "古典モデル", type: "選択問題",
+    question: "Naive Bayesのnaiveが指す仮定はどれか。",
+    answers: ["特徴量がクラス条件付きで独立", "クラス事前確率が必ず等しい", "全特徴量が正規分布"], correct: 0,
+    explain: "強い独立仮定ですが、テキスト分類など高次元疎データで有効な場合があります。",
+    code: "log_posterior = log_prior + log_likelihood.sum(axis=1)"
+  },
+  {
+    category: "教師なし", type: "選択問題",
+    question: "k-meansの目的関数は何を最小化するか。",
+    answers: ["各点と所属クラスタ重心の二乗距離和", "クラス分類の交差エントロピー", "方策の累積報酬"], correct: 0,
+    explain: "クラスタ内平方和を最小化します。球状・同程度の分散のクラスタを仮定しやすい手法です。",
+    code: "inertia = np.sum((X - centers[labels]) ** 2)"
+  },
+  {
+    category: "教師なし", type: "選択問題",
+    question: "PCAを適用する前に通常データを中心化する理由はどれか。",
+    answers: ["平均からの変動方向を主成分として求めるため", "ラベルをone-hot化するため", "クラスタ数を決めるため"], correct: 0,
+    explain: "中心化しないと原点からの大きさが主成分へ影響し、共分散構造を正しく捉えにくくなります。",
+    code: "X_centered = X - X.mean(axis=0, keepdims=True)"
+  },
+  {
+    category: "NumPy実践", type: "選択問題",
+    question: "np.stack([a,b], axis=0)とnp.concatenate([a,b], axis=0)の違いはどれか。",
+    answers: ["stackは新しい軸を追加し、concatenateは既存軸で連結する", "完全に同じ", "concatenateだけが配列を返す"], correct: 0,
+    explain: "a,bがshape(n,d)ならstackは(2,n,d)、axis=0のconcatenateは(2n,d)です。",
+    code: "stacked = np.stack([a, b], 0)\njoined = np.concatenate([a, b], 0)"
+  },
+  {
+    category: "Pandas実践", type: "選択問題",
+    question: "時系列の移動平均特徴で未来情報リークを防ぐ方法はどれか。",
+    answers: ["rollingの前にshift(1)して現在時点の値も除外する", "未来を含むcenter=Trueを使う", "全期間平均を各行へ入れる"], correct: 0,
+    explain: "予測時点より後の値だけでなく、目的設定によっては現在値も利用不能です。shiftで利用可能時点を揃えます。",
+    code: "df['ma7'] = df['value'].shift(1).rolling(7).mean()"
+  },
+  {
+    category: "確率分布", type: "選択問題",
+    question: "ポアソン分布の期待値と分散はどれか。",
+    answers: ["どちらもλ", "期待値0、分散1", "期待値λ、分散λ^2"], correct: 0,
+    explain: "一定区間の事象発生回数を表し、E[X]=Var(X)=λです。",
+    code: "mean = variance = lambda_"
+  },
+  {
+    category: "確率分布", type: "選択問題",
+    question: "指数分布の無記憶性を表す式はどれか。",
+    answers: ["P(X>s+t|X>s)=P(X>t)", "P(X=s+t)=P(X=s)+P(X=t)", "E[X]=0"], correct: 0,
+    explain: "すでにs時間待ったという情報が、さらにt時間待つ確率へ影響しない性質です。",
+    code: "survival = np.exp(-rate * t)"
+  },
+  {
+    category: "確率分布", type: "選択問題",
+    question: "二項尤度に対する共役事前分布として代表的なものはどれか。",
+    answers: ["ベータ分布", "正規分布のみ", "ポアソン分布"], correct: 0,
+    explain: "事前Beta(α,β)と成功s・失敗fを観測すると、事後はBeta(α+s,β+f)です。",
+    code: "posterior_alpha = alpha + successes\nposterior_beta = beta + failures"
   }
 ];
 
@@ -1317,6 +1448,32 @@ function slugifyTerm(title) {
 
 function getFormulaForConcept(concept) {
   const formulas = {
+    "教師あり学習": "\\displaystyle \\theta^*=\\arg\\min_\\theta\\frac{1}{N}\\sum_{i=1}^{N}L(f_\\theta(x_i),y_i)",
+    "教師なし学習": "\\displaystyle \\theta^*=\\arg\\min_\\theta L(X;\\theta)\\quad(y\\text{を使用しない})",
+    "半教師あり学習": "\\displaystyle L=L_{labeled}+\\lambda L_{unlabeled}",
+    "自己教師あり学習": "\\displaystyle L_{contrast}=-\\log\\frac{e^{sim(z_i,z_j)/\\tau}}{\\sum_k e^{sim(z_i,z_k)/\\tau}}",
+    "強化学習": "\\displaystyle Q(s,a)\\leftarrow Q(s,a)+\\alpha[r+\\gamma\\max_{a'}Q(s',a')-Q(s,a)]",
+    "線形回帰": "\\displaystyle \\hat{y}=Xw+b,\\quad \\hat{w}=(X^TX)^{-1}X^Ty",
+    "ロジスティック回帰": "\\displaystyle P(y=1|x)=\\sigma(w^Tx+b)",
+    "Support Vector Machine": "\\displaystyle \\min_{w,b}\\frac{1}{2}\\|w\\|^2+C\\sum_i\\max(0,1-y_i(w^Tx_i+b))",
+    "Decision Tree": "\\displaystyle Gini=1-\\sum_{k=1}^{K}p_k^2",
+    "Random Forest": "\\displaystyle \\hat{y}=\\mathrm{mode}(T_1(x),\\ldots,T_B(x))",
+    "k-Nearest Neighbors": "\\displaystyle \\hat{y}=\\mathrm{mode}\\{y_i:i\\in N_k(x)\\}",
+    "Naive Bayes": "\\displaystyle P(y|x_1,\\ldots,x_d)\\propto P(y)\\prod_{j=1}^{d}P(x_j|y)",
+    "Gradient Boosting": "\\displaystyle F_m(x)=F_{m-1}(x)+\\eta h_m(x)",
+    "k-means": "\\displaystyle J=\\sum_{i=1}^{N}\\|x_i-\\mu_{c_i}\\|_2^2",
+    "Principal Component Analysis": "\\displaystyle W^*=\\arg\\max_{W^TW=I}\\mathrm{tr}(W^T\\Sigma W)",
+    "reshapeとtranspose": "\\displaystyle (d_1,\\ldots,d_n)\\to(d'_1,\\ldots,d'_m),\\quad\\prod_i d_i=\\prod_j d'_j",
+    "concatenateとstack": "\\displaystyle concat:(n,d)+(m,d)\\to(n+m,d),\\quad stack:(n,d)^k\\to(k,n,d)",
+    "whereとargsort": "\\displaystyle y_i=\\begin{cases}a_i&c_i\\\\b_i&\\neg c_i\\end{cases}",
+    "pivot_table": "\\displaystyle table_{g,c}=AGG\\{x_i:G_i=g,C_i=c\\}",
+    "rollingと時系列集計": "\\displaystyle MA_t^{(w)}=\\frac{1}{w}\\sum_{i=0}^{w-1}x_{t-i}",
+    "ポアソン分布": "\\displaystyle P(X=k)=e^{-\\lambda}\\frac{\\lambda^k}{k!}",
+    "指数分布": "\\displaystyle f(x)=\\lambda e^{-\\lambda x},\\quad x\\ge0",
+    "一様分布": "\\displaystyle f(x)=\\frac{1}{b-a},\\quad a\\le x\\le b",
+    "ベータ分布": "\\displaystyle f(x)=\\frac{x^{\\alpha-1}(1-x)^{\\beta-1}}{B(\\alpha,\\beta)}",
+    "ガンマ分布": "\\displaystyle f(x)=\\frac{x^{k-1}e^{-x/\\theta}}{\\Gamma(k)\\theta^k}",
+    "t分布とカイ二乗分布": "\\displaystyle T=\\frac{\\bar{X}-\\mu}{S/\\sqrt{n}},\\quad \\chi^2=\\sum_{i=1}^{\\nu}Z_i^2",
     "ヒストグラムと分布形状": "\\displaystyle c_j=\\sum_{i=1}^{N}\\mathbf{1}[b_j\\le x_i<b_{j+1}]",
     "箱ひげ図と四分位範囲": "\\displaystyle IQR=Q_3-Q_1,\\quad [Q_1-1.5IQR,\\ Q_3+1.5IQR]",
     "標準化と正規化": "\\displaystyle z=\\frac{x-\\mu_{train}}{\\sigma_{train}},\\quad x'=\\frac{x-x_{min}}{x_{max}-x_{min}}",
@@ -1429,14 +1586,62 @@ function getAnswerGuide(concept) {
     ]
   };
 
+  const examples = {
+    "Python": "例えばスライスなら、x[2:8:2]がindex 2,4,6を返すこと、stopの8は含まれないことまで示します。",
+    "NumPy": "例えばshapeを実際に書き、演算前後で(32, 10)がどう変わるかを確認すると説明が具体的になります。",
+    "Pandas": "例えばtrainだけで中央値を計算してvalidへ適用する流れを示すと、処理とデータリーク防止を同時に説明できます。",
+    "統計": "小さな数値例を置き、式へ代入して得られる値を示すと、定義と解釈がつながります。",
+    "確率分布": "その分布が表す現象、パラメータ、期待値、分散、具体的な利用例を順に述べます。",
+    "前処理": "fitはtrainだけ、transformはtrain・valid・testへ同じ設定で行う、という処理順まで説明します。",
+    "最適化": "更新式の各項が更新方向と更新量へどう効くかを、学習率が大きい場合と小さい場合で比較します。",
+    "正規化": "入力shapeと平均・分散を取る軸を明示し、学習時と推論時の違いも示します。",
+    "CNN": "入力shape、カーネル、stride、paddingから出力shapeとパラメータ数を実際に計算します。",
+    "系列": "時刻tの入力、過去状態、次状態を式とshapeで示し、勾配が時間方向へ流れることを説明します。",
+    "Attention": "Q・K・Vのshape、QK^Tのshape、softmaxをかける軸を具体的に書きます。",
+    "Transformer": "Attention、残差接続、LayerNorm、MLPを通る順番と、Encoder/Decoderの役割を説明します。",
+    "生成モデル": "入力から潜在表現、再構成または生成結果までを追い、損失の各項が何を要求するかを説明します。",
+    "GNN": "対象ノードと近傍ノードを小さなグラフで示し、1層で何ホップの情報が集約されるかを説明します。",
+    "深層学習技術": "通常学習との違い、導入目的、学習ループのどこに処理を加えるか、得られる利点と副作用を説明します。",
+    "評価": "混同行列や予測確率の具体例から指標を計算し、どの種類の誤りを重視する指標かを説明します。"
+  };
+  const points = termStudyPoints[concept.title] || [];
+
   return guides[concept.title] || [
-    `${concept.title}は、まず「何を入力に取り、何を出力するか」を説明すると整理しやすいです。`,
-    `次に、数式の各記号が実装上のどの配列やテンソルに対応するかを確認します。特にshape、正規化する軸、softmaxや集約を行う軸は丁寧に見ると理解が深まります。`,
-    `最後に、学習時と推論時で挙動が変わるか、勾配がどの経路を通るか、計算量や安定性にどんな注意点があるかを自分の言葉で説明できるようにします。`
+    `${concept.title}とは、${concept.body}`,
+    examples[concept.category] || `具体的な入力例を置き、${concept.title}の処理前後で値や表現がどう変わるかを説明します。`,
+    points.length > 0
+      ? `試験では特に「${points.join("」「")}」を区別して答えます。`
+      : `${concept.title}を使う目的、前提条件、利点、注意点を具体例とともに答えます。`
   ];
 }
 
 const termStudyPoints = {
+  "教師あり学習": ["入力と正解ラベルの対応を使う", "回帰と分類を区別する", "未知データで汎化性能を評価する"],
+  "教師なし学習": ["正解ラベルを使わない", "クラスタリングと次元削減を区別する", "結果の評価方法をタスクごとに考える"],
+  "半教師あり学習": ["ラベル付きと未ラベルの損失を分ける", "Pseudo Labelの誤り増幅に注意する", "confidence thresholdを理解する"],
+  "自己教師あり学習": ["監督信号をデータ自身から作る", "pretext taskとdownstream taskを区別する", "contrastive/masked modelingの違いを説明する"],
+  "強化学習": ["状態・行動・報酬・方策を定義する", "即時報酬と累積報酬を区別する", "探索と活用のトレードオフを説明する"],
+  "線形回帰": ["最小二乗と正規方程式を説明する", "残差の仮定を確認する", "多重共線性に注意する"],
+  "ロジスティック回帰": ["出力はクラス1の確率", "log-oddsが入力の線形関数", "閾値でクラスへ変換する"],
+  "Support Vector Machine": ["マージン最大化を説明する", "Support Vectorが境界を決める", "Kernel TrickとCの役割を理解する"],
+  "Decision Tree": ["不純度減少で分割を選ぶ", "深さを増やすと過学習しやすい", "数値・カテゴリ特徴の分割を理解する"],
+  "Random Forest": ["Bootstrapと特徴量サブサンプリングを使う", "木同士の相関を下げる", "Out-of-Bag評価を説明する"],
+  "k-Nearest Neighbors": ["距離尺度とkを選ぶ", "特徴量スケールの影響が大きい", "推論時に訓練データとの距離計算が必要"],
+  "Naive Bayes": ["クラス条件付き独立を仮定する", "確率積はlog空間で計算する", "テキスト分類で使われる理由を説明する"],
+  "Gradient Boosting": ["弱学習器を逐次追加する", "残差または負の勾配へfitする", "学習率と木の数の関係を理解する"],
+  "k-means": ["割当と重心更新を反復する", "クラスタ数Kを事前に決める", "初期値と外れ値に敏感"],
+  "Principal Component Analysis": ["中心化してから共分散またはSVDを使う", "主成分は互いに直交する", "説明分散比で次元数を選ぶ"],
+  "reshapeとtranspose": ["reshapeは要素数を保つ", "transposeは軸順序を変える", "連続メモリとview/copyに注意する"],
+  "concatenateとstack": ["concatenateは既存軸", "stackは新規軸", "連結しない軸のshapeを揃える"],
+  "whereとargsort": ["whereは条件ごとの値選択", "argsortは値でなくindexを返す", "Top-kでは並び順を確認する"],
+  "pivot_table": ["index/columns/values/aggfuncを区別する", "重複組み合わせは集約される", "欠損セルの扱いを確認する"],
+  "rollingと時系列集計": ["窓に未来値を含めない", "windowとmin_periodsを設定する", "shiftを使ったlag特徴を理解する"],
+  "ポアソン分布": ["回数を表す離散分布", "期待値と分散はいずれもλ", "独立かつ一定発生率の仮定を確認する"],
+  "指数分布": ["待ち時間を表す連続分布", "無記憶性を持つ", "平均は1/λ"],
+  "一様分布": ["区間内で密度が一定", "平均(a+b)/2を説明する", "離散一様と連続一様を区別する"],
+  "ベータ分布": ["0から1の確率を表す", "αとβで形状が変わる", "ベルヌーイ/二項尤度の共役事前分布"],
+  "ガンマ分布": ["正の連続値を表す", "形状と尺度パラメータを区別する", "指数分布との関係を説明する"],
+  "t分布とカイ二乗分布": ["t分布は正規分布より裾が厚い", "自由度が増えると正規分布へ近づく", "カイ二乗は分散推定・適合度検定に使う"],
   "ヒストグラムと分布形状": ["ビン幅で見え方が変わる", "右歪み・左歪み・多峰性を読む", "ヒストグラムの高さと確率密度を区別する"],
   "箱ひげ図と四分位範囲": ["箱はQ1からQ3、中央線は中央値", "IQRは外れ値に比較的頑健", "ひげの定義は描画ライブラリで確認する"],
   "標準化と正規化": ["統計量は訓練データだけで推定する", "外れ値がMin-Maxに与える影響を理解する", "標準化後も分布形状は正規分布になるとは限らない"],
@@ -1512,6 +1717,203 @@ const termStudyPoints = {
 };
 
 const numpySamples = {
+  "教師あり学習": `import numpy as np
+
+class SupervisedLinearModel:
+    def fit(self, X, y):
+        Xb = np.c_[X, np.ones(len(X))]
+        self.w = np.linalg.pinv(Xb) @ y
+        return self
+
+    def predict(self, X):
+        return np.c_[X, np.ones(len(X))] @ self.w`,
+  "教師なし学習": `import numpy as np
+
+class UnsupervisedCentering:
+    def fit_transform(self, X):
+        self.mean = X.mean(axis=0)
+        centered = X - self.mean
+        _, _, vt = np.linalg.svd(centered, full_matrices=False)
+        return centered @ vt[:2].T`,
+  "半教師あり学習": `import numpy as np
+
+class PseudoLabelSelector:
+    def select(self, probabilities, threshold=0.95):
+        confidence = probabilities.max(axis=1)
+        labels = probabilities.argmax(axis=1)
+        mask = confidence >= threshold
+        return labels[mask], mask`,
+  "自己教師あり学習": `import numpy as np
+
+class CosineContrastive:
+    def similarity(self, z1, z2):
+        z1 = z1 / (np.linalg.norm(z1, axis=1, keepdims=True) + 1e-7)
+        z2 = z2 / (np.linalg.norm(z2, axis=1, keepdims=True) + 1e-7)
+        return z1 @ z2.T`,
+  "強化学習": `import numpy as np
+
+class QLearning:
+    def __init__(self, states, actions, alpha=0.1, gamma=0.99):
+        self.Q = np.zeros((states, actions))
+        self.alpha, self.gamma = alpha, gamma
+
+    def update(self, s, a, reward, next_s):
+        target = reward + self.gamma * self.Q[next_s].max()
+        self.Q[s, a] += self.alpha * (target - self.Q[s, a])`,
+  "線形回帰": `import numpy as np
+
+class LinearRegression:
+    def fit(self, X, y):
+        Xb = np.c_[X, np.ones(len(X))]
+        self.coef = np.linalg.pinv(Xb.T @ Xb) @ Xb.T @ y
+        return self
+
+    def predict(self, X):
+        return np.c_[X, np.ones(len(X))] @ self.coef`,
+  "ロジスティック回帰": `import numpy as np
+
+class LogisticRegression:
+    def __init__(self, features, lr=0.1):
+        self.w = np.zeros(features); self.b = 0.; self.lr = lr
+
+    def fit_step(self, X, y):
+        p = 1 / (1 + np.exp(-(X @ self.w + self.b)))
+        self.w -= self.lr * (X.T @ (p - y) / len(X))
+        self.b -= self.lr * np.mean(p - y)`,
+  "Support Vector Machine": `import numpy as np
+
+class LinearSVM:
+    def __init__(self, features, lr=0.01, C=1.0):
+        self.w = np.zeros(features); self.b = 0.; self.lr = lr; self.C = C
+
+    def fit_step(self, X, y):
+        margin = y * (X @ self.w + self.b)
+        active = margin < 1
+        grad_w = self.w - self.C * (X[active].T @ y[active]) / len(X)
+        self.w -= self.lr * grad_w`,
+  "Decision Tree": `import numpy as np
+
+class GiniSplit:
+    def impurity(self, y):
+        _, counts = np.unique(y, return_counts=True)
+        p = counts / counts.sum()
+        return 1 - np.sum(p ** 2)
+
+    def weighted(self, left, right):
+        n = len(left) + len(right)
+        return len(left)/n*self.impurity(left) + len(right)/n*self.impurity(right)`,
+  "Random Forest": `import numpy as np
+
+class BootstrapSampler:
+    def sample(self, X, y, rng):
+        index = rng.integers(0, len(X), size=len(X))
+        return X[index], y[index]
+
+    def vote(self, tree_predictions):
+        return (np.mean(tree_predictions, axis=0) >= 0.5).astype(int)`,
+  "k-Nearest Neighbors": `import numpy as np
+
+class KNNClassifier:
+    def fit(self, X, y): self.X, self.y = X, y
+    def predict_one(self, x, k=5):
+        index = np.argsort(np.linalg.norm(self.X - x, axis=1))[:k]
+        values, counts = np.unique(self.y[index], return_counts=True)
+        return values[counts.argmax()]`,
+  "Naive Bayes": `import numpy as np
+
+class GaussianNaiveBayes:
+    def fit(self, X, y):
+        self.classes = np.unique(y)
+        self.mean = {c: X[y == c].mean(0) for c in self.classes}
+        self.var = {c: X[y == c].var(0) + 1e-7 for c in self.classes}
+        self.prior = {c: np.mean(y == c) for c in self.classes}`,
+  "Gradient Boosting": `import numpy as np
+
+class BoostingState:
+    def __init__(self, learning_rate=0.1): self.lr = learning_rate
+    def residual(self, y, prediction): return y - prediction
+    def update(self, prediction, weak_prediction):
+        return prediction + self.lr * weak_prediction`,
+  "k-means": `import numpy as np
+
+class KMeans:
+    def step(self, X, centers):
+        distance = ((X[:, None, :] - centers[None, :, :]) ** 2).sum(2)
+        labels = distance.argmin(1)
+        new_centers = np.array([X[labels == k].mean(0) for k in range(len(centers))])
+        return labels, new_centers`,
+  "Principal Component Analysis": `import numpy as np
+
+class PCA:
+    def fit_transform(self, X, components=2):
+        self.mean = X.mean(0)
+        centered = X - self.mean
+        _, singular, vt = np.linalg.svd(centered, full_matrices=False)
+        self.components = vt[:components]
+        self.explained_variance = singular[:components] ** 2 / (len(X) - 1)
+        return centered @ self.components.T`,
+  "reshapeとtranspose": `import numpy as np
+
+x = np.arange(24).reshape(2, 3, 4)
+flat_batch = x.reshape(2, 12)
+channels_last = x.transpose(0, 2, 1)`,
+  "concatenateとstack": `import numpy as np
+
+x = np.ones((2, 3)); y = np.zeros((2, 3))
+rows = np.concatenate([x, y], axis=0)
+new_axis = np.stack([x, y], axis=0)`,
+  "whereとargsort": `import numpy as np
+
+score = np.array([0.2, 0.9, 0.4, 0.7])
+top2 = np.argsort(score)[-2:][::-1]
+positive = np.where(score >= 0.5, 1, 0)`,
+  "pivot_table": `import pandas as pd
+
+table = df.pivot_table(
+    index="class", columns="month", values="score",
+    aggfunc="mean", fill_value=0
+)`,
+  "rollingと時系列集計": `import pandas as pd
+
+df = df.sort_values("date")
+df["lag1"] = df["value"].shift(1)
+df["ma7"] = df["value"].shift(1).rolling(7, min_periods=1).mean()`,
+  "ポアソン分布": `import numpy as np
+
+class PoissonModel:
+    def pmf(self, k, lam):
+        import math
+        return np.exp(-lam) * lam**k / math.factorial(k)
+    def sample(self, lam, size): return np.random.poisson(lam, size)`,
+  "指数分布": `import numpy as np
+
+class ExponentialModel:
+    def pdf(self, x, rate): return rate * np.exp(-rate * x) * (x >= 0)
+    def sample(self, rate, size): return np.random.exponential(1 / rate, size)`,
+  "一様分布": `import numpy as np
+
+class UniformModel:
+    def pdf(self, x, a, b): return np.where((a <= x) & (x <= b), 1 / (b - a), 0)
+    def sample(self, a, b, size): return np.random.uniform(a, b, size)`,
+  "ベータ分布": `import numpy as np
+
+class BetaPosterior:
+    def update(self, alpha, beta, successes, failures):
+        return alpha + successes, beta + failures
+    def sample(self, alpha, beta, size): return np.random.beta(alpha, beta, size)`,
+  "ガンマ分布": `import numpy as np
+
+class GammaModel:
+    def mean_variance(self, shape, scale):
+        return shape * scale, shape * scale**2
+    def sample(self, shape, scale, size): return np.random.gamma(shape, scale, size)`,
+  "t分布とカイ二乗分布": `import numpy as np
+
+class TestDistributions:
+    def sample(self, df, size=1000):
+        t_values = np.random.standard_t(df, size)
+        chi2_values = np.random.chisquare(df, size)
+        return t_values, chi2_values`,
   "ヒストグラムと分布形状": `import numpy as np
 
 class HistogramAnalyzer:
@@ -2263,6 +2665,132 @@ class RocPoints:
 };
 
 const torchSamples = {
+  "教師あり学習": `import torch
+import torch.nn as nn
+
+model = nn.Linear(8, 3)
+optimizer = torch.optim.Adam(model.parameters())
+loss = nn.CrossEntropyLoss()(model(X_train), y_train)
+loss.backward(); optimizer.step()`,
+  "教師なし学習": `import torch
+
+X_centered = X - X.mean(dim=0, keepdim=True)
+U, S, Vh = torch.linalg.svd(X_centered, full_matrices=False)
+embedding = X_centered @ Vh[:2].T`,
+  "半教師あり学習": `import torch
+
+with torch.no_grad():
+    probability = model(X_unlabeled).softmax(-1)
+confidence, pseudo_label = probability.max(-1)
+mask = confidence >= 0.95`,
+  "自己教師あり学習": `import torch.nn.functional as F
+
+z1 = F.normalize(encoder(view1), dim=-1)
+z2 = F.normalize(encoder(view2), dim=-1)
+similarity = z1 @ z2.T / temperature`,
+  "強化学習": `import torch
+
+target = reward + gamma * next_q.max().detach()
+loss = torch.nn.functional.mse_loss(q_values[action], target)
+loss.backward(); optimizer.step()`,
+  "線形回帰": `import torch
+import torch.nn as nn
+
+model = nn.Linear(features, 1)
+loss = nn.MSELoss()(model(X), y)
+loss.backward()`,
+  "ロジスティック回帰": `import torch.nn as nn
+
+model = nn.Linear(features, 1)
+criterion = nn.BCEWithLogitsLoss()
+loss = criterion(model(X).squeeze(1), y.float())`,
+  "Support Vector Machine": `import torch
+
+score = X @ w + b
+hinge = torch.relu(1 - y * score).mean()
+loss = 0.5 * w.pow(2).sum() + C * hinge`,
+  "Decision Tree": `import torch
+
+counts = torch.bincount(labels, minlength=classes).float()
+probability = counts / counts.sum()
+gini = 1 - probability.pow(2).sum()`,
+  "Random Forest": `import torch
+
+tree_predictions = torch.stack(predictions)
+forest_probability = tree_predictions.float().mean(dim=0)
+forest_class = (forest_probability >= 0.5).long()`,
+  "k-Nearest Neighbors": `import torch
+
+distance = torch.cdist(query.unsqueeze(0), X_train).squeeze(0)
+index = distance.topk(k, largest=False).indices
+prediction = torch.mode(y_train[index]).values`,
+  "Naive Bayes": `import torch
+
+log_likelihood = -0.5 * (torch.log(2 * torch.pi * var) + (x - mean).pow(2) / var)
+log_posterior = log_prior + log_likelihood.sum(dim=-1)`,
+  "Gradient Boosting": `import torch
+
+residual = target - prediction
+prediction = prediction + learning_rate * weak_prediction`,
+  "k-means": `import torch
+
+distance = torch.cdist(X, centers)
+labels = distance.argmin(dim=1)
+centers = torch.stack([X[labels == k].mean(0) for k in range(K)])`,
+  "Principal Component Analysis": `import torch
+
+centered = X - X.mean(0, keepdim=True)
+U, S, Vh = torch.linalg.svd(centered, full_matrices=False)
+embedding = centered @ Vh[:components].T`,
+  "reshapeとtranspose": `import torch
+
+x = torch.arange(24).reshape(2, 3, 4)
+flat_batch = x.reshape(2, 12)
+permuted = x.permute(0, 2, 1)`,
+  "concatenateとstack": `import torch
+
+rows = torch.cat([x, y], dim=0)
+new_axis = torch.stack([x, y], dim=0)`,
+  "whereとargsort": `import torch
+
+clean = torch.where(x > 0, x, torch.zeros_like(x))
+topk = torch.argsort(score, descending=True)[:k]`,
+  "pivot_table": `import pandas as pd
+import torch
+
+table = df.pivot_table(index="class", columns="month", values="score", aggfunc="mean")
+tensor = torch.tensor(table.fillna(0).to_numpy(), dtype=torch.float32)`,
+  "rollingと時系列集計": `import pandas as pd
+import torch
+
+df["ma7"] = df["value"].shift(1).rolling(7).mean()
+features = torch.tensor(df[["ma7"]].fillna(0).to_numpy(), dtype=torch.float32)`,
+  "ポアソン分布": `import torch
+
+distribution = torch.distributions.Poisson(rate=3.0)
+samples = distribution.sample((1000,))
+log_prob = distribution.log_prob(samples)`,
+  "指数分布": `import torch
+
+distribution = torch.distributions.Exponential(rate=2.0)
+wait = distribution.sample((1000,))`,
+  "一様分布": `import torch
+
+distribution = torch.distributions.Uniform(low=0.0, high=1.0)
+samples = distribution.sample((1000,))`,
+  "ベータ分布": `import torch
+
+prior = torch.distributions.Beta(2.0, 2.0)
+probability_samples = prior.sample((1000,))`,
+  "ガンマ分布": `import torch
+
+distribution = torch.distributions.Gamma(concentration=2.0, rate=1.0)
+samples = distribution.sample((1000,))`,
+  "t分布とカイ二乗分布": `import torch
+
+t_dist = torch.distributions.StudentT(df=10.0)
+t_samples = t_dist.sample((1000,))
+chi2 = torch.distributions.Chi2(df=10.0).sample((1000,))`,
   "ヒストグラムと分布形状": `import torch
 
 x = torch.randn(1000)

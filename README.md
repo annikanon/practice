@@ -20,6 +20,9 @@
 - 欠損値処理、標準化、カテゴリ変数、データリークなどの前処理教材
 - 転移学習、Mixed Precision、知識蒸留、データ拡張などの発展技術
 - Python、NumPy、Pandas、統計、確率分布、最適化、CNN、系列モデル、Transformer、生成モデル、GNN、評価指標を横断
+- 教師あり・教師なし・半教師あり・自己教師あり・強化学習を整理
+- 線形/ロジスティック回帰、SVM、決定木、Random Forest、k-NN、Naive Bayes、Gradient Boostingを収録
+- k-means、PCA、NumPy/Pandas実践操作、追加の確率分布を収録
 - 学習率とエポックを変えられるミニ実験
 - ローカル保存される進捗チェック
 
