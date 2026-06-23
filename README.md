@@ -23,6 +23,8 @@
 - 教師あり・教師なし・半教師あり・自己教師あり・強化学習を整理
 - 線形/ロジスティック回帰、SVM、決定木、Random Forest、k-NN、Naive Bayes、Gradient Boostingを収録
 - k-means、PCA、NumPy/Pandas実践操作、追加の確率分布を収録
+- `np.c_`、`np.r_`、`newaxis`、`einsum`、Pandasの高度な選択・変換を収録
+- Pooling、Dilated/Transposed Convolution、ResNet Bottleneck、BPTT、Bidirectional RNN、Seq2Seqを収録
 - 学習率とエポックを変えられるミニ実験
 - ローカル保存される進捗チェック
 

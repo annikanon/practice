@@ -22,6 +22,23 @@ const roadmap = [
 ];
 
 const concepts = [
+  { category: "NumPy実践", title: "np.c_", body: "配列を列方向に連結する便利なindex trickです。1次元配列は列ベクトルとして扱われます。", code: "design = np.c_[x1, x2, np.ones(len(x1))]" },
+  { category: "NumPy実践", title: "np.r_", body: "配列やスライス指定を行方向へ連結します。学習・検証データの結合や連続値生成にも使えます。", code: "combined = np.r_[train_values, valid_values]\ngrid = np.r_[0:1:6j]" },
+  { category: "NumPy実践", title: "newaxisと次元追加", body: "np.newaxisまたはNoneで長さ1の軸を追加し、ブロードキャストやバッチ次元を調整します。", code: "column = x[:, np.newaxis]\nbatch = image[np.newaxis, ...]" },
+  { category: "NumPy実践", title: "np.einsum", body: "Einstein記法で内積、転置、バッチ行列積などを添字ベースで表現します。", code: "output = np.einsum('bd,dk->bk', X, W)" },
+  { category: "Pandas実践", title: "locとiloc", body: "locはラベル、ilocは整数位置で行列を選択します。locのスライスは終端を含む点に注意します。", code: "rows = df.loc[df['score'] >= 80, ['name', 'score']]\nfirst = df.iloc[:5, :3]" },
+  { category: "Pandas実践", title: "queryとassign", body: "queryで条件抽出し、assignで元DataFrameを変更せず派生列を追加できます。", code: "result = df.query('age >= 20').assign(z=lambda d: (d.score-d.score.mean())/d.score.std())" },
+  { category: "Pandas実践", title: "mapとapply", body: "Series.mapは要素単位の変換、DataFrame.applyは行・列単位の処理です。ベクトル演算を優先します。", code: "df['label_id'] = df['label'].map({'cat': 0, 'dog': 1})" },
+  { category: "Pandas実践", title: "Categorical型", body: "カテゴリの候補と順序を明示し、メモリ削減や未知カテゴリ管理に使います。", code: "dtype = pd.CategoricalDtype(['low','mid','high'], ordered=True)\ndf['level'] = df['level'].astype(dtype)" },
+  { category: "Pandas実践", title: "MultiIndex", body: "複数列を階層的indexとして持ち、グループ別時系列などの多次元表を扱います。", code: "indexed = df.set_index(['user_id', 'date']).sort_index()" },
+  { category: "CNN", title: "Pooling", body: "局所領域の最大値や平均値を集約し、空間サイズを縮小します。平行移動への頑健性と情報損失を理解します。", code: "out[i,j] = np.max(x[i*s:i*s+k, j*s:j*s+k])" },
+  { category: "CNN", title: "Dilated Convolution", body: "カーネル要素間に間隔を空け、パラメータ数を増やさず受容野を広げます。", code: "effective_kernel = dilation * (kernel - 1) + 1" },
+  { category: "CNN", title: "Transposed Convolution", body: "学習可能なアップサンプリングとして空間サイズを拡大します。通常畳み込みの逆演算そのものではありません。", code: "out_h = (h - 1) * stride - 2 * pad + kernel + output_pad" },
+  { category: "CNN", title: "ResNet Bottleneck", body: "1x1でチャネル削減、3x3で特徴抽出、1x1で復元する残差ブロックです。", code: "y = conv1x1_reduce(x)\ny = conv3x3(y)\ny = conv1x1_expand(y) + shortcut(x)" },
+  { category: "系列", title: "BPTT", body: "RNNを時間方向へ展開し、最終時刻側から連鎖律で勾配を伝播します。", code: "dh_prev = dh @ Wh.T * (1 - h_prev**2)" },
+  { category: "系列", title: "Bidirectional RNN", body: "順方向と逆方向のRNNで前後文脈を利用します。未来情報を使えないオンライン推論には不向きです。", code: "h = np.concatenate([h_forward, h_backward], axis=-1)" },
+  { category: "系列", title: "Seq2SeqとEncoder-Decoder", body: "Encoderが入力系列を表現へ変換し、Decoderが出力系列を自己回帰的に生成します。", code: "context = encoder(source)\noutput = decoder(target_input, context)" },
+  { category: "系列", title: "Teacher Forcing", body: "訓練時にDecoderの次入力として前時刻の正解を与えます。推論時との差によるExposure Biasに注意します。", code: "decoder_input = target[:, t-1] if training else prediction.argmax(-1)" },
   { category: "学習パラダイム", title: "教師あり学習", body: "入力Xと正解ラベルyの組から写像を学び、未知データの回帰値やクラスを予測します。", code: "model.fit(X_train, y_train)\npred = model.predict(X_test)" },
   { category: "学習パラダイム", title: "教師なし学習", body: "正解ラベルを使わず、データの構造、クラスタ、低次元表現、異常を発見します。", code: "clusters = kmeans(X)\nembedding = pca(X)" },
   { category: "学習パラダイム", title: "半教師あり学習", body: "少量のラベル付きデータと大量の未ラベルデータを組み合わせます。Pseudo Labelなどが代表例です。", code: "pseudo_y = model.predict(X_unlabeled)\nX_all = np.r_[X_labeled, X_unlabeled]" },
@@ -1265,6 +1282,90 @@ const quizItems = [
     answers: ["ベータ分布", "正規分布のみ", "ポアソン分布"], correct: 0,
     explain: "事前Beta(α,β)と成功s・失敗fを観測すると、事後はBeta(α+s,β+f)です。",
     code: "posterior_alpha = alpha + successes\nposterior_beta = beta + failures"
+  },
+  {
+    category: "NumPy実践", type: "選択問題",
+    question: "x1,x2がともにshape (100,)のとき、np.c_[x1,x2]のshapeはどれか。",
+    answers: ["(100, 2)", "(200,)", "(2, 100, 1)"], correct: 0,
+    explain: "np.c_は1次元配列を列ベクトルとして扱い、列方向に連結します。設計行列の作成に便利です。",
+    code: "X = np.c_[x1, x2]"
+  },
+  {
+    category: "NumPy実践", type: "選択問題",
+    question: "np.r_[0:1:6j]が生成するものはどれか。",
+    answers: ["0から1を含む等間隔な6点", "0から1未満の整数", "shape (6,6)の行列"], correct: 0,
+    explain: "np.r_の複素数stepは点数を指定します。この場合np.linspace(0,1,6)と同様です。",
+    code: "grid = np.r_[0:1:6j]"
+  },
+  {
+    category: "NumPy実践", type: "選択問題",
+    question: "np.einsum('bqd,bkd->bqk', Q, K)の出力が表すものはどれか。",
+    answers: ["バッチごとのQuery-Key内積行列", "Valueの平均", "Qの転置だけ"], correct: 0,
+    explain: "d添字が出力に残らないため特徴次元で総和され、b,q,kが残ります。Attention scoreのshapeになります。",
+    code: "scores = np.einsum('bqd,bkd->bqk', Q, K)"
+  },
+  {
+    category: "Pandas実践", type: "選択問題",
+    question: "df.loc[2:5]とdf.iloc[2:5]の典型的な違いはどれか。",
+    answers: ["locのラベルsliceは終端5を含み、ilocの位置sliceは5を含まない", "完全に同じ", "ilocは列を選べない"], correct: 0,
+    explain: "locはラベルベースで両端を含むslice、ilocはPython標準の位置sliceでstopを含みません。",
+    code: "by_label = df.loc[2:5]\nby_position = df.iloc[2:5]"
+  },
+  {
+    category: "Pandas実践", type: "選択問題",
+    question: "Series.mapとDataFrame.applyの使い分けとして適切なものはどれか。",
+    answers: ["mapはSeries要素の写像、applyは行または列単位の関数適用", "mapだけが欠損値を扱える", "applyは常にベクトル演算より高速"], correct: 0,
+    explain: "単純な算術はapplyよりベクトル化演算を優先します。mapは辞書によるカテゴリ変換にも便利です。",
+    code: "df['label_id'] = df['label'].map(label_map)"
+  },
+  {
+    category: "CNN", type: "選択問題",
+    question: "3x3カーネル、dilation=2のDilated Convolutionの有効カーネルサイズはどれか。",
+    answers: ["5", "6", "9"], correct: 0,
+    explain: "k_eff=d(k-1)+1=2×(3-1)+1=5です。パラメータ数は3x3のまま受容野が広がります。",
+    code: "effective_kernel = dilation * (kernel - 1) + 1"
+  },
+  {
+    category: "CNN", type: "選択問題",
+    question: "Transposed Convolutionについて正しい説明はどれか。",
+    answers: ["学習可能なアップサンプリングだが、通常畳み込みの逆関数とは限らない", "必ず完全に元画像を復元する", "パラメータを持たない"], correct: 0,
+    explain: "畳み込み演算を行列で表したときの転置に対応しますが、情報を失った通常畳み込みの数学的逆関数ではありません。",
+    code: "layer = nn.ConvTranspose2d(64, 32, 4, stride=2, padding=1)"
+  },
+  {
+    category: "CNN", type: "選択問題",
+    question: "Max PoolingとAverage Poolingの違いとして適切なものはどれか。",
+    answers: ["Maxは局所最大応答、Averageは局所平均を残す", "Maxだけが学習パラメータを持つ", "Averageは空間サイズを変えられない"], correct: 0,
+    explain: "どちらも通常は学習パラメータを持ちません。Maxは強い特徴、Averageは全体的な応答を保持します。",
+    code: "max_value = patch.max()\naverage_value = patch.mean()"
+  },
+  {
+    category: "系列", type: "選択問題",
+    question: "BPTTで勾配消失・爆発が生じる主な理由はどれか。",
+    answers: ["時刻方向に同じ再帰重み由来のヤコビアンを繰り返し掛ける", "系列を並べ替える", "入力をone-hot化する"], correct: 0,
+    explain: "固有値や活性化関数の微分が1より小さいと消失、大きいと爆発しやすくなります。",
+    code: "dh_prev = dtanh @ Wh.T"
+  },
+  {
+    category: "系列", type: "選択問題",
+    question: "Bidirectional RNNをオンライン音声認識で使いにくい理由はどれか。",
+    answers: ["逆方向RNNが未来の入力を必要とする", "隠れ状態を持たない", "分類に使えない"], correct: 0,
+    explain: "系列全体が揃ってから逆方向へ処理するため、未来フレームが未到着のリアルタイム処理では遅延が生じます。",
+    code: "h = torch.cat([h_forward, h_backward], dim=-1)"
+  },
+  {
+    category: "系列", type: "選択問題",
+    question: "Teacher ForcingによるExposure Biasとは何か。",
+    answers: ["学習時は正解履歴、推論時は自身の予測履歴を使う分布差", "訓練データが少ないこと", "勾配が全て0になること"], correct: 0,
+    explain: "推論時の小さな誤りが次入力へ入り、連鎖的に誤差が増えることがあります。Scheduled Samplingが緩和策の一つです。",
+    code: "next_input = true_token if training else predicted_token"
+  },
+  {
+    category: "系列", type: "選択問題",
+    question: "Attention以前の基本Seq2Seqで固定長contextが問題になる理由はどれか。",
+    answers: ["長い入力系列の全情報を1つのベクトルへ圧縮する必要がある", "Decoderが出力を生成できない", "Encoderが勾配を使わない"], correct: 0,
+    explain: "AttentionはDecoderが各入力時刻のEncoder状態を直接参照できるようにし、固定長ボトルネックを緩和します。",
+    code: "context = encoder(source)\nlogits = decoder(target_input, context)"
   }
 ];
 
@@ -1448,6 +1549,23 @@ function slugifyTerm(title) {
 
 function getFormulaForConcept(concept) {
   const formulas = {
+    "np.c_": "\\displaystyle (n,p)\\;\\mathrm{c\\_}\\;(n,q)\\longrightarrow(n,p+q)",
+    "np.r_": "\\displaystyle (n,d)\\;\\mathrm{r\\_}\\;(m,d)\\longrightarrow(n+m,d)",
+    "newaxisと次元追加": "\\displaystyle (n,)\\to(n,1)\\;\\text{or}\\;(1,n)",
+    "np.einsum": "\\displaystyle Y_{bk}=\\sum_d X_{bd}W_{dk}",
+    "locとiloc": "\\displaystyle loc[label],\\quad iloc[position]",
+    "queryとassign": "\\displaystyle D'=\\{r\\in D:condition(r)\\},\\quad D'[z]=f(D')",
+    "mapとapply": "\\displaystyle y_i=f(x_i)\\;\\text{or}\\;y_j=f(X_{:,j})",
+    "Categorical型": "\\displaystyle c_i\\in\\{c_1,\\ldots,c_K\\},\\quad code(c_i)\\in\\{0,\\ldots,K-1\\}",
+    "MultiIndex": "\\displaystyle index=(level_1,level_2,\\ldots,level_k)",
+    "Pooling": "\\displaystyle y_{ij}=\\max_{(u,v)\\in\\mathcal{R}_{ij}}x_{uv}",
+    "Dilated Convolution": "\\displaystyle k_{eff}=d(k-1)+1",
+    "Transposed Convolution": "\\displaystyle H_{out}=(H_{in}-1)S-2P+K+P_{out}",
+    "ResNet Bottleneck": "\\displaystyle y=x+W_3\\sigma(W_2\\sigma(W_1x))",
+    "BPTT": "\\displaystyle \\frac{\\partial L}{\\partial h_t}=\\frac{\\partial L_t}{\\partial h_t}+\\frac{\\partial L}{\\partial h_{t+1}}\\frac{\\partial h_{t+1}}{\\partial h_t}",
+    "Bidirectional RNN": "\\displaystyle h_t=[\\overrightarrow{h_t};\\overleftarrow{h_t}]",
+    "Seq2SeqとEncoder-Decoder": "\\displaystyle c=Encoder(x_{1:T}),\\quad P(y)=\\prod_tP(y_t|y_{<t},c)",
+    "Teacher Forcing": "\\displaystyle input_t=y_{t-1}^{true}\\;\\text{during training}",
     "教師あり学習": "\\displaystyle \\theta^*=\\arg\\min_\\theta\\frac{1}{N}\\sum_{i=1}^{N}L(f_\\theta(x_i),y_i)",
     "教師なし学習": "\\displaystyle \\theta^*=\\arg\\min_\\theta L(X;\\theta)\\quad(y\\text{を使用しない})",
     "半教師あり学習": "\\displaystyle L=L_{labeled}+\\lambda L_{unlabeled}",
@@ -1616,6 +1734,23 @@ function getAnswerGuide(concept) {
 }
 
 const termStudyPoints = {
+  "np.c_": ["1次元配列を列として連結する", "結果shapeを事前に確認する", "np.column_stackとの対応を理解する"],
+  "np.r_": ["第0軸方向へ連結する", "スライス記法と複素stepによる点数指定を理解する", "np.concatenate(axis=0)との対応を見る"],
+  "newaxisと次元追加": ["追加する軸位置でブロードキャスト結果が変わる", "Noneとnp.newaxisは同じ", "squeezeで長さ1の軸を除去できる"],
+  "np.einsum": ["入力添字と出力添字を明示する", "消える添字が総和対象", "バッチ行列積やAttentionを簡潔に書ける"],
+  "locとiloc": ["locはラベル、ilocは整数位置", "locスライスは終端を含む", "SettingWithCopyを避けるためloc代入を使う"],
+  "queryとassign": ["query内では列名を式として使う", "assignは新しいDataFrameを返す", "外部変数は@nameで参照する"],
+  "mapとapply": ["mapはSeries要素変換", "applyは行/列処理", "可能ならベクトル化演算を優先する"],
+  "Categorical型": ["カテゴリ候補を固定する", "orderedの有無を決める", "未知カテゴリはNaNになる点に注意する"],
+  "MultiIndex": ["階層ごとのsliceとgroupbyを理解する", "sort_indexして効率的に選択する", "reset_indexで列へ戻せる"],
+  "Pooling": ["kernelとstrideから出力shapeを計算する", "MaxとAverageの保持情報の違い", "学習パラメータを持たない"],
+  "Dilated Convolution": ["dilationで有効カーネルサイズが増える", "パラメータ数は通常畳み込みと同じ", "gridding artifactに注意する"],
+  "Transposed Convolution": ["出力サイズ式を使える", "通常畳み込みの逆関数ではない", "checkerboard artifactを理解する"],
+  "ResNet Bottleneck": ["1x1-3x3-1x1の役割を説明する", "shortcutのshapeを合わせる", "expansion比と計算量を理解する"],
+  "BPTT": ["時間方向に連鎖律を適用する", "勾配消失・爆発が生じる理由を説明する", "Truncated BPTTの目的を理解する"],
+  "Bidirectional RNN": ["順方向と逆方向の状態を結合する", "未来情報を利用する", "リアルタイム推論では利用制約がある"],
+  "Seq2SeqとEncoder-Decoder": ["EncoderとDecoderの役割を分ける", "固定長contextのボトルネックをAttentionが緩和する", "開始・終了tokenを理解する"],
+  "Teacher Forcing": ["訓練時は前時刻の正解を入力する", "推論時は自身の予測を入力する", "Exposure BiasとScheduled Samplingを説明する"],
   "教師あり学習": ["入力と正解ラベルの対応を使う", "回帰と分類を区別する", "未知データで汎化性能を評価する"],
   "教師なし学習": ["正解ラベルを使わない", "クラスタリングと次元削減を区別する", "結果の評価方法をタスクごとに考える"],
   "半教師あり学習": ["ラベル付きと未ラベルの損失を分ける", "Pseudo Labelの誤り増幅に注意する", "confidence thresholdを理解する"],
@@ -1717,6 +1852,111 @@ const termStudyPoints = {
 };
 
 const numpySamples = {
+  "np.c_": `import numpy as np
+
+x1 = np.array([1, 2, 3])
+x2 = np.array([10, 20, 30])
+design = np.c_[x1, x2, np.ones(len(x1))]
+print(design.shape)  # (3, 3)`,
+  "np.r_": `import numpy as np
+
+train = np.array([[1, 2], [3, 4]])
+valid = np.array([[5, 6]])
+combined = np.r_[train, valid]
+grid = np.r_[0:1:6j]`,
+  "newaxisと次元追加": `import numpy as np
+
+x = np.array([1, 2, 3])
+column = x[:, np.newaxis]
+row = x[np.newaxis, :]
+outer = column * row`,
+  "np.einsum": `import numpy as np
+
+class EinsumExamples:
+    def linear(self, X, W): return np.einsum('bd,dk->bk', X, W)
+    def batch_matmul(self, A, B): return np.einsum('bij,bjk->bik', A, B)
+    def attention_score(self, Q, K): return np.einsum('bqd,bkd->bqk', Q, K)`,
+  "locとiloc": `import pandas as pd
+
+high_score = df.loc[df["score"] >= 80, ["name", "score"]]
+first_block = df.iloc[:5, :3]
+df.loc[df["score"].isna(), "score"] = df["score"].median()`,
+  "queryとassign": `import pandas as pd
+
+threshold = 20
+result = (
+    df.query("age >= @threshold")
+      .assign(score_z=lambda d: (d.score - d.score.mean()) / d.score.std())
+)`,
+  "mapとapply": `import pandas as pd
+
+label_map = {"cat": 0, "dog": 1}
+df["label_id"] = df["label"].map(label_map)
+df["row_total"] = df[["x1", "x2"]].sum(axis=1)`,
+  "Categorical型": `import pandas as pd
+
+level_type = pd.CategoricalDtype(["low", "mid", "high"], ordered=True)
+df["level"] = df["level"].astype(level_type)
+codes = df["level"].cat.codes`,
+  "MultiIndex": `import pandas as pd
+
+indexed = df.set_index(["user_id", "date"]).sort_index()
+one_user = indexed.loc[(user_id, slice(None)), :]
+flat = indexed.reset_index()`,
+  "Pooling": `import numpy as np
+
+class MaxPool2D:
+    def __init__(self, kernel=2, stride=2): self.k, self.s = kernel, stride
+    def forward(self, x):
+        oh = (x.shape[0] - self.k) // self.s + 1
+        ow = (x.shape[1] - self.k) // self.s + 1
+        return np.array([[x[i*self.s:i*self.s+self.k, j*self.s:j*self.s+self.k].max() for j in range(ow)] for i in range(oh)])`,
+  "Dilated Convolution": `import numpy as np
+
+class DilatedKernel:
+    def effective_size(self, kernel, dilation): return dilation * (kernel - 1) + 1
+    def patch(self, x, i, j, kernel, dilation):
+        end_i = i + dilation * (kernel - 1) + 1
+        end_j = j + dilation * (kernel - 1) + 1
+        return x[i:end_i:dilation, j:end_j:dilation]`,
+  "Transposed Convolution": `class ConvTransposeShape:
+    def output_size(self, input_size, kernel, stride=1, pad=0, output_pad=0):
+        return (input_size - 1) * stride - 2 * pad + kernel + output_pad`,
+  "ResNet Bottleneck": `import numpy as np
+
+class BottleneckShape:
+    def forward(self, x, W1, W2, W3):
+        shortcut = x
+        y = np.maximum(0, x @ W1)
+        y = np.maximum(0, y @ W2)
+        y = y @ W3
+        return np.maximum(0, y + shortcut)`,
+  "BPTT": `import numpy as np
+
+class TanhRNNBackward:
+    def step(self, dh, h, h_prev, x, Wh, Wx):
+        dtanh = dh * (1 - h ** 2)
+        dWh = h_prev.T @ dtanh
+        dWx = x.T @ dtanh
+        dh_prev = dtanh @ Wh.T
+        return dh_prev, dWh, dWx`,
+  "Bidirectional RNN": `import numpy as np
+
+class BidirectionalOutput:
+    def combine(self, forward_states, backward_states):
+        aligned_backward = backward_states[:, ::-1, :]
+        return np.concatenate([forward_states, aligned_backward], axis=-1)`,
+  "Seq2SeqとEncoder-Decoder": `class Seq2SeqFlow:
+    def forward(self, source, target_input):
+        context, encoder_state = self.encoder(source)
+        logits, decoder_state = self.decoder(target_input, encoder_state, context)
+        return logits`,
+  "Teacher Forcing": `import numpy as np
+
+class TeacherForcingChooser:
+    def choose(self, true_token, predicted_token, ratio=0.5):
+        use_teacher = np.random.rand() < ratio
+        return true_token if use_teacher else predicted_token`,
   "教師あり学習": `import numpy as np
 
 class SupervisedLinearModel:
@@ -2665,6 +2905,97 @@ class RocPoints:
 };
 
 const torchSamples = {
+  "np.c_": `import numpy as np
+import torch
+
+design_np = np.c_[x1, x2, np.ones(len(x1))]
+design = torch.tensor(design_np, dtype=torch.float32)`,
+  "np.r_": `import numpy as np
+import torch
+
+combined_np = np.r_[train_values, valid_values]
+combined = torch.tensor(combined_np, dtype=torch.float32)`,
+  "newaxisと次元追加": `import torch
+
+x = torch.tensor([1, 2, 3])
+column = x[:, None]
+row = x[None, :]
+outer = column * row`,
+  "np.einsum": `import torch
+
+output = torch.einsum('bd,dk->bk', X, W)
+batch_product = torch.einsum('bij,bjk->bik', A, B)
+attention_score = torch.einsum('bqd,bkd->bqk', Q, K)`,
+  "locとiloc": `import pandas as pd
+import torch
+
+selected = df.loc[df["score"] >= 80, feature_columns]
+X = torch.tensor(selected.to_numpy(), dtype=torch.float32)`,
+  "queryとassign": `import pandas as pd
+import torch
+
+result = df.query("age >= 20").assign(score2=lambda d: d.score ** 2)
+X = torch.tensor(result[feature_columns].to_numpy(), dtype=torch.float32)`,
+  "mapとapply": `import pandas as pd
+import torch
+
+df["label_id"] = df["label"].map({"cat": 0, "dog": 1})
+y = torch.tensor(df["label_id"].to_numpy(), dtype=torch.long)`,
+  "Categorical型": `import pandas as pd
+import torch
+
+df["city"] = df["city"].astype("category")
+codes = torch.tensor(df["city"].cat.codes.to_numpy(), dtype=torch.long)`,
+  "MultiIndex": `import pandas as pd
+import torch
+
+indexed = df.set_index(["user_id", "date"]).sort_index()
+values = torch.tensor(indexed[feature_columns].to_numpy(), dtype=torch.float32)`,
+  "Pooling": `import torch.nn as nn
+
+max_pool = nn.MaxPool2d(kernel_size=2, stride=2)
+avg_pool = nn.AvgPool2d(kernel_size=2, stride=2)
+pooled = max_pool(feature_map)`,
+  "Dilated Convolution": `import torch.nn as nn
+
+dilated = nn.Conv2d(32, 64, kernel_size=3, padding=2, dilation=2)
+output = dilated(feature_map)`,
+  "Transposed Convolution": `import torch.nn as nn
+
+upsample = nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1)
+larger_map = upsample(feature_map)`,
+  "ResNet Bottleneck": `import torch
+import torch.nn as nn
+
+class Bottleneck(nn.Module):
+    def __init__(self, channels, hidden):
+        super().__init__()
+        self.block = nn.Sequential(nn.Conv2d(channels, hidden, 1), nn.ReLU(), nn.Conv2d(hidden, hidden, 3, padding=1), nn.ReLU(), nn.Conv2d(hidden, channels, 1))
+    def forward(self, x): return torch.relu(self.block(x) + x)`,
+  "BPTT": `import torch
+import torch.nn as nn
+
+rnn = nn.RNN(8, 16, batch_first=True)
+output, hidden = rnn(sequence)
+loss = criterion(output, target)
+loss.backward()`,
+  "Bidirectional RNN": `import torch.nn as nn
+
+rnn = nn.LSTM(input_size=32, hidden_size=64, bidirectional=True, batch_first=True)
+output, state = rnn(sequence)
+# output shape: (batch, length, 128)`,
+  "Seq2SeqとEncoder-Decoder": `import torch.nn as nn
+
+class Seq2Seq(nn.Module):
+    def __init__(self, encoder, decoder):
+        super().__init__(); self.encoder, self.decoder = encoder, decoder
+    def forward(self, source, target_input):
+        context, state = self.encoder(source)
+        return self.decoder(target_input, state, context)`,
+  "Teacher Forcing": `import torch
+
+use_teacher = torch.rand(()) < teacher_forcing_ratio
+next_input = target[:, t] if use_teacher else logits.argmax(dim=-1)`,
   "教師あり学習": `import torch
 import torch.nn as nn
 
