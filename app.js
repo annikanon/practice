@@ -23,6 +23,60 @@ const roadmap = [
 
 const concepts = [
   {
+    category: "統計",
+    title: "ヒストグラムと分布形状",
+    body: "連続値を区間に分け、度数を可視化します。歪度、多峰性、外れ値、ビン幅の影響を読み取ります。",
+    code: "counts, edges = np.histogram(x, bins=10)"
+  },
+  {
+    category: "統計",
+    title: "箱ひげ図と四分位範囲",
+    body: "中央値、四分位点、IQR、外れ値候補を可視化します。分布の中心とばらつきを比較できます。",
+    code: "q1, median, q3 = np.percentile(x, [25, 50, 75])\niqr = q3 - q1"
+  },
+  {
+    category: "前処理",
+    title: "標準化と正規化",
+    body: "標準化は平均0・標準偏差1へ変換し、Min-Max正規化は指定範囲へ線形変換します。",
+    code: "z = (x - train_mean) / train_std\nx01 = (x - train_min) / (train_max - train_min)"
+  },
+  {
+    category: "前処理",
+    title: "カテゴリ変数エンコーディング",
+    body: "One-Hot、Ordinal、Target Encodingなどでカテゴリを数値化します。順序の有無とリークに注意します。",
+    code: "encoded = pd.get_dummies(df, columns=['city'], dtype=float)"
+  },
+  {
+    category: "前処理",
+    title: "データ分割とリーク防止",
+    body: "訓練・検証・テストを目的別に分け、前処理の統計量を訓練データだけで推定します。",
+    code: "mean = X_train.mean(axis=0)\nX_valid = (X_valid - mean) / std"
+  },
+  {
+    category: "深層学習技術",
+    title: "転移学習とFine-tuning",
+    body: "事前学習済みモデルの表現を利用し、下流タスクへ適応します。凍結範囲と学習率を調整します。",
+    code: "for p in backbone.parameters(): p.requires_grad = False"
+  },
+  {
+    category: "深層学習技術",
+    title: "Mixed Precision Training",
+    body: "FP16/BF16とFP32を使い分け、速度とメモリ効率を改善します。FP16ではLoss Scalingが重要です。",
+    code: "with torch.autocast('cuda', dtype=torch.float16):\n    loss = criterion(model(x), y)"
+  },
+  {
+    category: "深層学習技術",
+    title: "Knowledge Distillation",
+    body: "Teacherのsoft targetをStudentへ学習させ、小型モデルへ知識を移します。温度Tで分布を滑らかにします。",
+    code: "soft_loss = kl_div(log_softmax(s/T), softmax(t/T)) * T**2"
+  },
+  {
+    category: "深層学習技術",
+    title: "Data Augmentation",
+    body: "ラベルを保つ変換で訓練データの多様性を増やします。画像、音声、文章で変換方法が異なります。",
+    code: "augmented = np.flip(image, axis=1).copy()"
+  },
+  {
     category: "Python",
     title: "スライス",
     body: "シーケンスやNumPy配列から範囲を切り出す構文です。start:stop:stepと、ビュー・コピーの違いを理解します。",
@@ -969,6 +1023,117 @@ const quizItems = [
     correct: 0,
     explain: "近傍集約を繰り返すと、連結したノードの表現が混ざり続け、最終的に似た埋め込みへ収束しやすくなります。",
     code: "H = A_norm @ H @ W  # repeated propagation can smooth node features"
+  },
+  {
+    category: "統計グラフ",
+    type: "グラフ読解",
+    question: "このヒストグラムから最も適切に読み取れる分布の特徴はどれか。",
+    chart: { type: "histogram", title: "右に裾が長い分布", values: [4, 10, 18, 27, 21, 13, 8, 5, 3, 1] },
+    answers: ["右側に長い裾を持つ正の歪みがある", "完全な一様分布である", "分散が必ず0である"],
+    correct: 0,
+    explain: "度数の山が左寄りにあり、右側へ小さな度数が続いているため右裾の長い分布です。一般に平均が中央値より大きくなりやすいです。",
+    code: "counts, edges = np.histogram(x, bins=10)"
+  },
+  {
+    category: "統計グラフ",
+    type: "グラフ読解",
+    question: "この散布図から読み取れる最も適切な関係はどれか。",
+    chart: { type: "scatter", title: "特徴量Xと目的変数Y", points: [[1,1.2],[2,1.9],[3,3.1],[4,3.8],[5,5.2],[6,5.7],[7,7.1],[8,7.8]] },
+    answers: ["強い正の線形相関がある", "強い負の相関がある", "Yは常に一定である"],
+    correct: 0,
+    explain: "Xが大きくなるほどYもほぼ直線的に増えています。ただし相関が強くても因果関係を証明するものではありません。",
+    code: "corr = np.corrcoef(x, y)[0, 1]"
+  },
+  {
+    category: "統計グラフ",
+    type: "グラフ読解",
+    question: "箱ひげ図の値がmin=1, Q1=3, median=5, Q3=8, max=15のとき、IQRはいくつか。",
+    chart: { type: "boxplot", title: "テスト得点の箱ひげ図", values: [1, 3, 5, 8, 15] },
+    answers: ["5", "7", "14"],
+    correct: 0,
+    explain: "IQR=Q3-Q1=8-3=5です。IQRは中央50%のばらつきを示し、外れ値の影響を受けにくい尺度です。",
+    code: "q1, q3 = np.percentile(x, [25, 75])\niqr = q3 - q1"
+  },
+  {
+    category: "前処理",
+    type: "選択問題",
+    question: "欠損率が80%の特徴量を扱うとき、最初に検討すべきことはどれか。",
+    answers: ["欠損の発生理由と予測対象との関係を調べ、削除・補完・欠損フラグを比較する", "必ず平均値で埋める", "欠損行を無条件に全削除する"],
+    correct: 0,
+    explain: "高欠損率でも欠損自体に情報がある場合があります。MCAR/MAR/MNARの可能性、業務上の意味、検証性能を見て処理を選びます。",
+    code: "missing_rate = df.isna().mean().sort_values(ascending=False)"
+  },
+  {
+    category: "前処理",
+    type: "選択問題",
+    question: "標準化でデータリークを防ぐ正しい実装はどれか。",
+    answers: ["trainでmean/stdを求め、valid/testにも同じ値を使う", "全データでmean/stdを求める", "testごとに別のmean/stdを求める"],
+    correct: 0,
+    explain: "検証・テストの分布情報をtrain時に使わないため、前処理器はtrainだけでfitします。",
+    code: "mean, std = X_train.mean(0), X_train.std(0)\nX_valid = (X_valid - mean) / (std + 1e-7)"
+  },
+  {
+    category: "前処理",
+    type: "選択問題",
+    question: "Target Encodingで特に注意すべきことはどれか。",
+    answers: ["同じ行の目的変数をエンコード値へ混ぜないようout-of-foldで計算する", "カテゴリを必ず整数順序へ変換する", "欠損値を無視してよい"],
+    correct: 0,
+    explain: "全trainの目的変数平均をそのまま各train行へ使うと、自分自身のラベル情報が特徴へ漏れます。OOF方式が有効です。",
+    code: "encoded_valid = valid['category'].map(train.groupby('category')['target'].mean())"
+  },
+  {
+    category: "深層学習技術",
+    type: "選択問題",
+    question: "転移学習の初期段階でbackboneを凍結する主な理由はどれか。",
+    answers: ["事前学習済み表現を急激に壊さず、headを先に適応させるため", "勾配計算を必ず不可能にするため", "入力画像を削除するため"],
+    correct: 0,
+    explain: "データが少ない下流タスクでは、大きな学習率で全層を更新すると有用な事前学習表現を壊すことがあります。",
+    code: "for p in model.backbone.parameters():\n    p.requires_grad = False"
+  },
+  {
+    category: "深層学習技術",
+    type: "選択問題",
+    question: "FP16 Mixed PrecisionでGradScalerを使う目的はどれか。",
+    answers: ["小さな勾配のunderflowを防ぐため損失を一時的に拡大する", "モデルを整数だけで計算する", "バッチサイズを必ず1にする"],
+    correct: 0,
+    explain: "損失を大きな係数でscaleしてbackwardし、optimizer更新前に勾配をunscaleします。非有限値も検出できます。",
+    code: "scaler.scale(loss).backward()\nscaler.step(optimizer)\nscaler.update()"
+  },
+  {
+    category: "深層学習技術",
+    type: "選択問題",
+    question: "Knowledge Distillationで温度Tを大きくする効果はどれか。",
+    answers: ["Teacherのクラス確率を滑らかにし、クラス間の類似情報を見せる", "確率を必ずone-hotにする", "Studentのパラメータを0にする"],
+    correct: 0,
+    explain: "高い温度では確率分布が平滑になり、正解以外のクラスに対するTeacherの相対的な知識もStudentへ伝えられます。",
+    code: "teacher_prob = softmax(teacher_logits / temperature)"
+  },
+  {
+    category: "深層学習技術",
+    type: "選択問題",
+    question: "Mixupで入力とラベルを処理する方法として正しいものはどれか。",
+    answers: ["2標本の入力とone-hotラベルを同じ比率lambdaで線形混合する", "入力だけ混ぜてラベルは片方を使う", "全画像を0にする"],
+    correct: 0,
+    explain: "Mixupではx'=λx_i+(1-λ)x_j、y'=λy_i+(1-λ)y_jとして、入力とラベルを対応させて混合します。",
+    code: "mixed_x = lam * x1 + (1 - lam) * x2\nmixed_y = lam * y1 + (1 - lam) * y2"
+  },
+  {
+    category: "深層学習技術",
+    type: "選択問題",
+    question: "勾配チェックで有限差分を使う目的はどれか。",
+    answers: ["解析的backwardの勾配が数値微分と一致するか検証する", "推論速度を測る", "データを正規化する"],
+    correct: 0,
+    explain: "小さなepsilonでパラメータを前後に動かした損失差から数値勾配を求め、backward実装のバグを検出します。",
+    code: "numeric_grad = (loss(w + eps) - loss(w - eps)) / (2 * eps)"
+  },
+  {
+    category: "深層学習技術",
+    type: "選択問題",
+    question: "モデルのCalibrationが良い状態とはどれか。",
+    answers: ["予測確率0.8の標本群でおよそ80%が正解する", "全予測確率が1.0である", "Accuracyが必ず100%である"],
+    correct: 0,
+    explain: "Calibrationは予測確率と実際の正解頻度の一致度です。Temperature Scalingなどで調整できます。",
+    code: "calibrated_prob = softmax(logits / temperature)"
   }
 ];
 
@@ -987,6 +1152,8 @@ const labInsight = document.querySelector("#labInsight");
 const questionCounter = document.querySelector("#questionCounter");
 const questionType = document.querySelector("#questionType");
 const questionText = document.querySelector("#questionText");
+const quizChartPanel = document.querySelector("#quizChartPanel");
+const quizChart = document.querySelector("#quizChart");
 const codePrompt = document.querySelector("#codePrompt");
 const answerList = document.querySelector("#answerList");
 const fillAnswer = document.querySelector("#fillAnswer");
@@ -1150,6 +1317,15 @@ function slugifyTerm(title) {
 
 function getFormulaForConcept(concept) {
   const formulas = {
+    "ヒストグラムと分布形状": "\\displaystyle c_j=\\sum_{i=1}^{N}\\mathbf{1}[b_j\\le x_i<b_{j+1}]",
+    "箱ひげ図と四分位範囲": "\\displaystyle IQR=Q_3-Q_1,\\quad [Q_1-1.5IQR,\\ Q_3+1.5IQR]",
+    "標準化と正規化": "\\displaystyle z=\\frac{x-\\mu_{train}}{\\sigma_{train}},\\quad x'=\\frac{x-x_{min}}{x_{max}-x_{min}}",
+    "カテゴリ変数エンコーディング": "\\displaystyle x_c\\mapsto (\\mathbf{1}[c=c_1],\\ldots,\\mathbf{1}[c=c_K])",
+    "データ分割とリーク防止": "\\displaystyle \\mu=\\mathrm{mean}(X_{train}),\\quad X_{valid}'=(X_{valid}-\\mu)/\\sigma",
+    "転移学習とFine-tuning": "\\displaystyle \\theta_{head}^*=\\arg\\min L(f_{head}(f_{backbone}(x)),y)",
+    "Mixed Precision Training": "\\displaystyle g_{scaled}=S\\cdot g,\\quad g=g_{scaled}/S",
+    "Knowledge Distillation": "\\displaystyle L=\\alpha L_{hard}+(1-\\alpha)T^2D_{KL}(p_T^T\\|p_S^T)",
+    "Data Augmentation": "\\displaystyle (x,y)\\mapsto (T(x),y),\\quad T\\sim\\mathcal{T}",
     "スライス": "\\displaystyle x[a:b:s]=(x_a,x_{a+s},x_{a+2s},\\ldots),\\quad i<b",
     "ブロードキャスト": "\\displaystyle (m,n)+(n)\\longrightarrow(m,n)",
     "np.dotと行列積": "\\displaystyle C_{ij}=\\sum_{k=1}^{d}A_{ik}B_{kj}",
@@ -1261,6 +1437,15 @@ function getAnswerGuide(concept) {
 }
 
 const termStudyPoints = {
+  "ヒストグラムと分布形状": ["ビン幅で見え方が変わる", "右歪み・左歪み・多峰性を読む", "ヒストグラムの高さと確率密度を区別する"],
+  "箱ひげ図と四分位範囲": ["箱はQ1からQ3、中央線は中央値", "IQRは外れ値に比較的頑健", "ひげの定義は描画ライブラリで確認する"],
+  "標準化と正規化": ["統計量は訓練データだけで推定する", "外れ値がMin-Maxに与える影響を理解する", "標準化後も分布形状は正規分布になるとは限らない"],
+  "カテゴリ変数エンコーディング": ["名義尺度に不自然な大小関係を入れない", "未知カテゴリの扱いを決める", "Target Encodingはリーク防止のためfold外統計を使う"],
+  "データ分割とリーク防止": ["testは最終評価まで触らない", "時系列は未来から過去へ情報を漏らさない", "前処理器もtrainだけでfitする"],
+  "転移学習とFine-tuning": ["凍結と全層更新を使い分ける", "backboneには小さい学習率を使うことが多い", "BatchNormのtrain/eval状態にも注意する"],
+  "Mixed Precision Training": ["FP16のunderflowをLoss Scalingで抑える", "BF16は指数部が広くLoss Scaling不要な場合が多い", "一部演算はFP32で実行される"],
+  "Knowledge Distillation": ["温度Tを上げてクラス間関係を滑らかにする", "soft lossとhard label lossを組み合わせる", "T^2で勾配スケールを補正する"],
+  "Data Augmentation": ["ラベルを保持する変換を選ぶ", "検証・テストにはランダム拡張を適用しない", "Mixup/CutMixではラベルも混合する"],
   "スライス": ["startは含みstopは含まない", "負のindexとstepを説明する", "NumPyスライスはビューになり得る点に注意する"],
   "ブロードキャスト": ["末尾の次元から互換性を判定する", "次元が同じか片方が1なら拡張できる", "意図しない巨大配列生成やshapeミスに注意する"],
   "np.dotと行列積": ["1次元と2次元で意味が変わる", "行列積では内側の次元を一致させる", "高次元ではnp.matmulやeinsumとの違いを確認する"],
@@ -1327,6 +1512,90 @@ const termStudyPoints = {
 };
 
 const numpySamples = {
+  "ヒストグラムと分布形状": `import numpy as np
+
+class HistogramAnalyzer:
+    def analyze(self, x, bins=10):
+        counts, edges = np.histogram(x, bins=bins)
+        mean = x.mean()
+        skew_direction = "right" if np.median(x) < mean else "left_or_symmetric"
+        return counts, edges, skew_direction`,
+  "箱ひげ図と四分位範囲": `import numpy as np
+
+class BoxplotStatistics:
+    def compute(self, x):
+        q1, median, q3 = np.percentile(x, [25, 50, 75])
+        iqr = q3 - q1
+        lower, upper = q1 - 1.5 * iqr, q3 + 1.5 * iqr
+        outliers = x[(x < lower) | (x > upper)]
+        return q1, median, q3, outliers`,
+  "標準化と正規化": `import numpy as np
+
+class StandardScaler:
+    def fit(self, X):
+        self.mean = X.mean(axis=0, keepdims=True)
+        self.std = X.std(axis=0, keepdims=True) + 1e-7
+        return self
+
+    def transform(self, X):
+        return (X - self.mean) / self.std`,
+  "カテゴリ変数エンコーディング": `import pandas as pd
+
+class OneHotFrameEncoder:
+    def fit_transform(self, df, column):
+        self.categories = sorted(df[column].dropna().unique())
+        dtype = pd.CategoricalDtype(self.categories)
+        values = df[column].astype(dtype)
+        return pd.get_dummies(values, prefix=column, dtype=float)`,
+  "データ分割とリーク防止": `import numpy as np
+
+class TrainOnlyPreprocessor:
+    def fit(self, X_train):
+        self.mean = X_train.mean(axis=0)
+        self.std = X_train.std(axis=0) + 1e-7
+        return self
+
+    def transform(self, X):
+        return (X - self.mean) / self.std`,
+  "転移学習とFine-tuning": `import numpy as np
+
+class FrozenBackboneModel:
+    def __init__(self, pretrained_W, out_dim):
+        self.backbone_W = pretrained_W.copy()
+        self.head_W = np.random.randn(pretrained_W.shape[1], out_dim) * 0.01
+
+    def forward(self, X):
+        frozen_features = np.maximum(0, X @ self.backbone_W)
+        return frozen_features @ self.head_W`,
+  "Mixed Precision Training": `import numpy as np
+
+class LossScaler:
+    def __init__(self, scale=1024.0):
+        self.scale = scale
+
+    def scale_loss(self, loss):
+        return loss * self.scale
+
+    def unscale_gradient(self, grad):
+        return grad / self.scale`,
+  "Knowledge Distillation": `import numpy as np
+
+class DistillationLoss:
+    def softmax(self, x):
+        e = np.exp(x - x.max(axis=1, keepdims=True))
+        return e / e.sum(axis=1, keepdims=True)
+
+    def forward(self, student, teacher, temperature=4.0):
+        ps = self.softmax(student / temperature)
+        pt = self.softmax(teacher / temperature)
+        return np.mean(np.sum(pt * (np.log(pt + 1e-7) - np.log(ps + 1e-7)), axis=1)) * temperature**2`,
+  "Data Augmentation": `import numpy as np
+
+class ImageAugmenter:
+    def horizontal_flip(self, image, probability=0.5):
+        if np.random.rand() < probability:
+            return np.flip(image, axis=1).copy()
+        return image.copy()`,
   "スライス": `import numpy as np
 
 class SliceExamples:
@@ -1994,6 +2263,73 @@ class RocPoints:
 };
 
 const torchSamples = {
+  "ヒストグラムと分布形状": `import torch
+
+x = torch.randn(1000)
+counts = torch.histc(x, bins=10, min=-3, max=3)`,
+  "箱ひげ図と四分位範囲": `import torch
+
+x = torch.randn(1000)
+q1, median, q3 = torch.quantile(x, torch.tensor([0.25, 0.5, 0.75]))
+iqr = q3 - q1
+outliers = x[(x < q1 - 1.5 * iqr) | (x > q3 + 1.5 * iqr)]`,
+  "標準化と正規化": `import torch
+
+X_train = torch.randn(100, 8)
+mean = X_train.mean(dim=0, keepdim=True)
+std = X_train.std(dim=0, keepdim=True)
+X_scaled = (X_train - mean) / (std + 1e-7)`,
+  "カテゴリ変数エンコーディング": `import pandas as pd
+import torch
+
+encoded = pd.get_dummies(df, columns=["city"], dtype=float)
+X = torch.tensor(encoded.to_numpy(), dtype=torch.float32)`,
+  "データ分割とリーク防止": `import torch
+
+mean = X_train.mean(dim=0, keepdim=True)
+std = X_train.std(dim=0, keepdim=True)
+X_train = (X_train - mean) / (std + 1e-7)
+X_valid = (X_valid - mean) / (std + 1e-7)`,
+  "転移学習とFine-tuning": `import torch.nn as nn
+
+class TransferModel(nn.Module):
+    def __init__(self, backbone, feature_dim, classes):
+        super().__init__()
+        self.backbone = backbone
+        for parameter in self.backbone.parameters():
+            parameter.requires_grad = False
+        self.head = nn.Linear(feature_dim, classes)
+
+    def forward(self, x):
+        with torch.no_grad():
+            features = self.backbone(x)
+        return self.head(features)`,
+  "Mixed Precision Training": `import torch
+
+scaler = torch.amp.GradScaler("cuda")
+optimizer.zero_grad()
+with torch.autocast("cuda", dtype=torch.float16):
+    output = model(x)
+    loss = criterion(output, target)
+scaler.scale(loss).backward()
+scaler.step(optimizer)
+scaler.update()`,
+  "Knowledge Distillation": `import torch
+import torch.nn.functional as F
+
+temperature = 4.0
+teacher_prob = F.softmax(teacher_logits / temperature, dim=-1)
+student_log_prob = F.log_softmax(student_logits / temperature, dim=-1)
+soft_loss = F.kl_div(student_log_prob, teacher_prob, reduction="batchmean") * temperature**2`,
+  "Data Augmentation": `import torch
+from torchvision.transforms import v2
+
+augment = v2.Compose([
+    v2.RandomHorizontalFlip(p=0.5),
+    v2.RandomResizedCrop((224, 224), scale=(0.8, 1.0)),
+    v2.ColorJitter(brightness=0.2, contrast=0.2)
+])
+augmented = augment(image)`,
   "スライス": `import torch
 
 x = torch.arange(12).reshape(3, 4)
@@ -3035,12 +3371,75 @@ function updateQuizBrowser() {
   });
 }
 
+function drawQuizChart(spec) {
+  quizChartPanel.hidden = !spec;
+  if (!spec) return;
+
+  const ctx = quizChart.getContext("2d");
+  const width = quizChart.width;
+  const height = quizChart.height;
+  const padding = 48;
+  ctx.clearRect(0, 0, width, height);
+  ctx.fillStyle = "#fbfdfc";
+  ctx.fillRect(0, 0, width, height);
+  ctx.strokeStyle = "#b8c6cf";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(padding, 20);
+  ctx.lineTo(padding, height - padding);
+  ctx.lineTo(width - 20, height - padding);
+  ctx.stroke();
+
+  if (spec.type === "histogram") {
+    const max = Math.max(...spec.values);
+    const barWidth = (width - padding - 40) / spec.values.length;
+    spec.values.forEach((value, index) => {
+      const barHeight = value / max * (height - padding - 50);
+      ctx.fillStyle = "#16817a";
+      ctx.fillRect(padding + index * barWidth + 2, height - padding - barHeight, barWidth - 4, barHeight);
+    });
+  }
+
+  if (spec.type === "scatter") {
+    const xs = spec.points.map((p) => p[0]);
+    const ys = spec.points.map((p) => p[1]);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    spec.points.forEach(([x, y]) => {
+      const px = padding + (x - minX) / (maxX - minX || 1) * (width - padding - 40);
+      const py = height - padding - (y - minY) / (maxY - minY || 1) * (height - padding - 40);
+      ctx.beginPath();
+      ctx.arc(px, py, 6, 0, Math.PI * 2);
+      ctx.fillStyle = "#2f6fdd";
+      ctx.fill();
+    });
+  }
+
+  if (spec.type === "boxplot") {
+    const min = spec.values[0], q1 = spec.values[1], median = spec.values[2], q3 = spec.values[3], max = spec.values[4];
+    const scale = (value) => padding + (value - min) / (max - min || 1) * (width - padding - 50);
+    const y = height / 2;
+    ctx.strokeStyle = "#172026";
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(scale(min), y); ctx.lineTo(scale(max), y); ctx.stroke();
+    ctx.fillStyle = "rgba(242, 193, 78, 0.45)";
+    ctx.fillRect(scale(q1), y - 48, scale(q3) - scale(q1), 96);
+    ctx.strokeRect(scale(q1), y - 48, scale(q3) - scale(q1), 96);
+    ctx.beginPath(); ctx.moveTo(scale(median), y - 48); ctx.lineTo(scale(median), y + 48); ctx.stroke();
+  }
+
+  ctx.fillStyle = "#172026";
+  ctx.font = "700 18px Segoe UI, sans-serif";
+  ctx.fillText(spec.title, padding, 18);
+}
+
 function renderQuiz() {
   const item = quizItems[currentQuiz];
   const filteredPosition = filteredQuizIndexes.indexOf(currentQuiz);
   questionCounter.textContent = `Q${currentQuiz + 1} / 全${quizItems.length}問（絞り込み ${filteredPosition + 1}/${filteredQuizIndexes.length}）`;
   questionType.textContent = `${item.category} / ${item.type}`;
   questionText.textContent = item.question;
+  drawQuizChart(item.chart);
   codePrompt.textContent = item.codePrompt || "";
   codePrompt.hidden = !item.codePrompt;
   answerList.innerHTML = "";

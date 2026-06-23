@@ -556,6 +556,21 @@ input[type="range"] {
   line-height: 1.6;
 }
 
+.quiz-chart-panel {
+  margin: 0 0 16px;
+  padding: 12px;
+  background: #fbfdfc;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.quiz-chart-panel canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 360px;
+}
+
 .answers {
   display: grid;
   gap: 10px;
