@@ -25,6 +25,9 @@
 - k-means、PCA、NumPy/Pandas実践操作、追加の確率分布を収録
 - `np.c_`、`np.r_`、`newaxis`、`einsum`、Pandasの高度な選択・変換を収録
 - Pooling、Dilated/Transposed Convolution、ResNet Bottleneck、BPTT、Bidirectional RNN、Seq2Seqを収録
+- Graph Transformer、R-GCN、異種グラフ、Graph Contrastive Learning、Over-squashing、Graph Positional Encodingを収録
+- Truncated BPTT、Peephole LSTM、ConvLSTM、Scheduled Sampling、CTC Lossなど系列モデルの応用を収録
+- Graph Mini-batch Sampling、Ablation Study、Calibrationなど研究・論文実装で役立つ観点を収録
 - 学習率とエポックを変えられるミニ実験
 - ローカル保存される進捗チェック
 

@@ -486,6 +486,90 @@ const concepts = [
     code: "h_v = sigma(W @ concat(h_v, mean([h_u for u in sampled_neighbors])))"
   },
   {
+    category: "GNN",
+    title: "Graph Transformer",
+    body: "グラフ構造にSelf-Attentionを適用し、距離・エッジ・次数などの構造バイアスをAttentionへ入れる研究寄りのGNNです。",
+    code: "scores = Q @ K.T / np.sqrt(d)\nscores += edge_bias + distance_bias\nH = softmax(scores, axis=-1) @ V"
+  },
+  {
+    category: "GNN",
+    title: "Heterogeneous GNN",
+    body: "ノード型やエッジ型が複数あるグラフを扱います。関係ごとに重みを分けるR-GCNやメタパスを使うHANが代表例です。",
+    code: "message_r = A_r @ X @ W_r\nH = sum(message_r for r in relations)"
+  },
+  {
+    category: "GNN",
+    title: "R-GCN",
+    body: "関係タイプごとに異なる変換行列を持つRelational GCNです。知識グラフやマルチリレーショングラフで使われます。",
+    code: "h_i = sum(A_r[i] @ X @ W_r for r in relations) + X[i] @ W_self"
+  },
+  {
+    category: "GNN",
+    title: "Graph Contrastive Learning",
+    body: "同じグラフやノードの拡張ビューを近づけ、異なるサンプルを遠ざける自己教師あり学習です。ラベルが少ない研究設定で重要です。",
+    code: "loss = -np.log(np.exp(sim(z1, z2) / tau) / np.exp(sim(z1 @ Z.T / tau)).sum())"
+  },
+  {
+    category: "GNN",
+    title: "Over-squashing",
+    body: "遠くの多数のノード情報が少数次元の表現へ圧縮され、長距離依存を伝えにくくなるGNNの問題です。",
+    code: "bottleneck = boundary_edges / max(1, reachable_nodes)"
+  },
+  {
+    category: "GNN",
+    title: "Graph Positional Encoding",
+    body: "グラフには自然な順序がないため、Laplacian固有ベクトルやRandom Walk特徴で位置情報を与えます。",
+    code: "eigvals, eigvecs = np.linalg.eigh(L)\npos = eigvecs[:, 1:k+1]"
+  },
+  {
+    category: "系列",
+    title: "Truncated BPTT",
+    body: "長い系列を短い区間に分けて誤差逆伝播します。計算メモリを抑えますが、長期依存の勾配は切れます。",
+    code: "for start in range(0, T, chunk):\n    loss = forward(x[:, start:start+chunk])\n    backward(loss)"
+  },
+  {
+    category: "系列",
+    title: "Peephole LSTM",
+    body: "LSTMのゲートが前時刻または現在のセル状態を直接参照します。正確なタイミング制御が必要な系列で使われます。",
+    code: "f_t = sigmoid(x_t @ Wxf + h @ Whf + c_prev * w_cf + b_f)"
+  },
+  {
+    category: "系列",
+    title: "ConvLSTM",
+    body: "LSTMの行列積を畳み込みに置き換え、時系列画像や気象レーダーのような空間系列を扱います。",
+    code: "i = sigmoid(conv_xi(x_t) + conv_hi(h_prev))\nc = f * c_prev + i * g"
+  },
+  {
+    category: "系列",
+    title: "Scheduled Sampling",
+    body: "Seq2Seqで教師強制とモデル自身の予測入力を確率的に混ぜ、学習時と推論時のずれを小さくする手法です。",
+    code: "use_teacher = np.random.rand() < teacher_ratio\nnext_input = y_true if use_teacher else y_pred"
+  },
+  {
+    category: "系列",
+    title: "CTC Loss",
+    body: "入力系列と出力ラベルの時刻対応が未知のときに使う損失です。音声認識や文字認識でblankを含む経路を周辺化します。",
+    code: "p_y = sum(path_prob(pi) for pi in alignments if collapse(pi) == y)"
+  },
+  {
+    category: "研究応用",
+    title: "Graph Mini-batch Sampling",
+    body: "巨大グラフでは全ノードを同時に処理せず、近傍・サブグラフ・ランダムウォークをサンプリングして学習します。",
+    code: "batch_nodes = sample_nodes(train_nodes, B)\nsubgraph = sample_neighbors(batch_nodes, fanouts=[15, 10])"
+  },
+  {
+    category: "研究応用",
+    title: "Ablation Study",
+    body: "提案手法の部品を外して性能差を測り、どの要素が効いているかを検証する研究の基本実験です。",
+    code: "score_full = evaluate(model_full)\nscore_no_gate = evaluate(model_without_gate)\neffect = score_full - score_no_gate"
+  },
+  {
+    category: "研究応用",
+    title: "Calibration",
+    body: "予測確率が実際の正解率と合っているかを見る考え方です。研究・実運用では精度だけでなく信頼度も重要です。",
+    code: "ece = sum(len(bin)/n * abs(acc(bin) - conf(bin)) for bin in bins)"
+  },
+  {
     category: "評価",
     title: "Precision / Recall / F1",
     body: "不均衡データではAccuracyだけでは不十分です。適合率、再現率、F1の意味を使い分けます。",
@@ -1397,6 +1481,99 @@ const prevQuestion = document.querySelector("#prevQuestion");
 const nextQuestion = document.querySelector("#nextQuestion");
 
 let currentQuiz = 0;
+quizItems.push(
+  {
+    category: "GNN",
+    type: "選択問題",
+    question: "Graph Transformerでエッジ情報や距離情報をAttentionに入れる主な理由はどれか。",
+    answers: ["グラフ構造の帰納バイアスをAttentionスコアへ反映するため", "ノード特徴を必ず0にするため", "勾配を完全に止めるため"],
+    correct: 0,
+    explain: "Graph Transformerは通常のSelf-Attentionだけではグラフの隣接・距離・エッジ型を明示しにくいため、edge biasやpositional biasをスコアに足して構造を反映します。",
+    code: "scores = Q @ K.T / np.sqrt(d)\nscores += edge_bias + pos_bias\nattn = softmax(scores, axis=-1)"
+  },
+  {
+    category: "GNN",
+    type: "選択問題",
+    question: "R-GCNが通常のGCNと比べて明示的に扱うものはどれか。",
+    answers: ["関係タイプごとの重み行列", "画像のRGBチャネルだけ", "時刻方向の忘却ゲート"],
+    correct: 0,
+    explain: "R-GCNは知識グラフのようにエッジ関係が複数ある場合に、relationごとの変換W_rを使います。関係数が多いとパラメータが増えるためbasis分解も重要です。",
+    code: "H = X @ W_self\nfor r in relations:\n    H += A_r @ X @ W_r"
+  },
+  {
+    category: "GNN",
+    type: "選択問題",
+    question: "Graph Contrastive Learningの説明として適切なものはどれか。",
+    answers: ["同一対象の拡張ビューを近づけ、別対象を遠ざける", "ラベルを必ずone-hotで増やす", "隣接行列を必ず単位行列にする"],
+    correct: 0,
+    explain: "グラフの自己教師あり学習では、ノード特徴drop、エッジdrop、サブグラフ抽出などで2つのビューを作り、InfoNCEなどで表現を学習します。",
+    code: "loss = -log(exp(sim(z_i, z_pos)/tau) / sum(exp(sim(z_i, z_j)/tau)))"
+  },
+  {
+    category: "GNN",
+    type: "選択問題",
+    question: "Over-squashingの説明として最も適切なものはどれか。",
+    answers: ["遠くの多数の情報が固定次元表現へ圧縮されて伝わりにくくなる", "全ノード表現が同じ値に近づく", "訓練データのラベルだけが欠損する"],
+    correct: 0,
+    explain: "Over-smoothingは深い層で表現が似てしまう問題、Over-squashingは長距離・多数経路の情報が狭い表現やグラフのボトルネックに押し込められる問題です。",
+    code: "many_messages -> fixed_dim_h_v"
+  },
+  {
+    category: "GNN",
+    type: "選択問題",
+    question: "Graph Positional EncodingでLaplacian固有ベクトルを使う目的はどれか。",
+    answers: ["順序を持たないグラフに構造的位置情報を与える", "すべてのエッジを削除する", "分類ラベルを連続値に変える"],
+    correct: 0,
+    explain: "グラフには文章のような自然な位置番号がないため、Laplacian固有ベクトルやRandom Walk特徴で構造的位置を表します。符号反転の不定性にも注意します。",
+    code: "eigvals, eigvecs = np.linalg.eigh(L)\npe = eigvecs[:, 1:k+1]"
+  },
+  {
+    category: "系列",
+    type: "選択問題",
+    question: "Truncated BPTTでhidden stateをdetachする主な理由はどれか。",
+    answers: ["計算グラフが全系列に伸び続けるのを防ぐため", "系列長を必ず1にするため", "入力埋め込みを削除するため"],
+    correct: 0,
+    explain: "長い系列をchunkごとに学習するとき、hiddenをdetachしないと過去chunkまで計算グラフがつながりメモリが増え続けます。一方で長期依存の勾配は近似になります。",
+    code: "out, h = rnn(chunk, h)\nloss.backward()\nh = h.detach()"
+  },
+  {
+    category: "系列",
+    type: "選択問題",
+    question: "ConvLSTMが通常のLSTMと違う点として適切なものはどれか。",
+    answers: ["ゲート計算で行列積の代わりに畳み込みを使う", "セル状態を持たない", "系列方向を完全に無視する"],
+    correct: 0,
+    explain: "ConvLSTMは画像や気象データのような空間構造を持つ系列で、x_tとh_{t-1}に畳み込みを適用してゲートを計算します。",
+    code: "i_t = sigmoid(conv_x(x_t) + conv_h(h_prev))"
+  },
+  {
+    category: "系列",
+    type: "選択問題",
+    question: "CTC Lossが役立つ状況はどれか。",
+    answers: ["入力時刻と出力ラベルの対応が未知の系列認識", "全サンプルが独立同分布で系列でない分類", "グラフの次数正規化だけをしたい場合"],
+    correct: 0,
+    explain: "CTCは音声認識や手書き文字認識のように、フレームとラベルの厳密な対応が与えられない場合に、blankを含む全アラインメント経路を周辺化します。",
+    code: "loss = nn.CTCLoss(blank=0)(log_probs, targets, input_lengths, target_lengths)"
+  },
+  {
+    category: "研究応用",
+    type: "選択問題",
+    question: "Ablation Studyの目的として最も適切なものはどれか。",
+    answers: ["提案手法の各構成要素が性能に与える影響を切り分ける", "テストデータを訓練に混ぜる", "乱数seedを隠す"],
+    correct: 0,
+    explain: "研究ではfull modelだけでなく、attentionなし、positional encodingなし、loss項なしのように部品を外して比較し、主張と実験結果を対応させます。",
+    code: "effect = score_full - score_without_component"
+  },
+  {
+    category: "研究応用",
+    type: "選択問題",
+    question: "Calibrationで確認したいことはどれか。",
+    answers: ["予測確率の自信度と実際の正解率が対応しているか", "モデルのパラメータ数だけ", "訓練データの行数だけ"],
+    correct: 0,
+    explain: "Accuracyが高くても、0.9と予測したサンプルが実際に90%正解するとは限りません。ECEや信頼度図で確率の信頼性を評価します。",
+    code: "ECE = sum(|bin|/n * abs(acc(bin) - conf(bin)))"
+  }
+);
+
 let filteredQuizIndexes = quizItems.map((_, index) => index);
 
 const termDetails = {
@@ -1533,6 +1710,7 @@ kl = -0.5 * np.sum(1 + log_var - mu**2 - np.exp(log_var))`,
   }
 };
 
+
 function escapeHtml(value) {
   return value.replace(/[&<>"']/g, (char) => ({
     "&": "&amp;",
@@ -1644,11 +1822,25 @@ function getFormulaForConcept(concept) {
     "RNN": "\\displaystyle h_t=\\tanh(W_xx_t+W_hh_{t-1}+b)",
     "LSTM": "\\displaystyle c_t=f_t\\odot c_{t-1}+i_t\\odot \\tilde{c}_t,\\quad h_t=o_t\\odot\\tanh(c_t)",
     "GRU": "\\displaystyle h_t=(1-z_t)\\odot h_{t-1}+z_t\\odot\\tilde{h}_t",
+    "Truncated BPTT": "\\displaystyle \\frac{\\partial L_{t:t+k}}{\\partial h_t}\\;\\text{のみを近似的に逆伝播}",
+    "Peephole LSTM": "\\displaystyle f_t=\\sigma(W_fx_t+U_fh_{t-1}+V_fc_{t-1}+b_f)",
+    "ConvLSTM": "\\displaystyle C_t=f_t\\odot C_{t-1}+i_t\\odot\\tanh(W_{xc}*X_t+W_{hc}*H_{t-1})",
+    "Scheduled Sampling": "\\displaystyle \\tilde{y}_{t-1}=m_ty_{t-1}^{true}+(1-m_t)\\hat{y}_{t-1}",
+    "CTC Loss": "\\displaystyle P(y|x)=\\sum_{\\pi\\in\\mathcal{B}^{-1}(y)}\\prod_tP(\\pi_t|x)",
     "Multi-Head Attention": "\\displaystyle \\mathrm{MHA}(Q,K,V)=\\mathrm{Concat}(head_1,\\ldots,head_h)W^O",
     "Positional Encoding": "\\displaystyle PE_{pos,2i}=\\sin\\left(\\frac{pos}{10000^{2i/d}}\\right),\\quad PE_{pos,2i+1}=\\cos\\left(\\frac{pos}{10000^{2i/d}}\\right)",
     "Pre-LN Transformer": "\\displaystyle x'=x+\\mathrm{Sublayer}(\\mathrm{LayerNorm}(x))",
     "AutoEncoder": "\\displaystyle z=f_\\phi(x),\\quad \\hat{x}=g_\\theta(z),\\quad L=\\|x-\\hat{x}\\|^2",
     "GAN": "\\displaystyle \\min_G\\max_D\\mathbb{E}_{x\\sim p_{data}}[\\log D(x)]+\\mathbb{E}_{z\\sim p_z}[\\log(1-D(G(z)))]",
+    "Graph Transformer": "\\displaystyle H'=\\mathrm{softmax}\\left(\\frac{QK^T}{\\sqrt{d}}+B_{edge}+B_{pos}\\right)V",
+    "Heterogeneous GNN": "\\displaystyle h_v'=\\sigma\\left(\\sum_{r\\in\\mathcal{R}}\\sum_{u\\in\\mathcal{N}_r(v)}\\frac{1}{c_{v,r}}W_rh_u\\right)",
+    "R-GCN": "\\displaystyle h_i^{(l+1)}=\\sigma\\left(\\sum_r\\sum_{j\\in\\mathcal{N}_i^r}\\frac{1}{c_{i,r}}W_r^{(l)}h_j^{(l)}+W_0h_i^{(l)}\\right)",
+    "Graph Contrastive Learning": "\\displaystyle L_i=-\\log\\frac{\\exp(sim(z_i,z_i^+)/\\tau)}{\\sum_j\\exp(sim(z_i,z_j)/\\tau)}",
+    "Over-squashing": "\\displaystyle \\text{many distant signals}\\rightarrow\\text{fixed-size }h_v",
+    "Graph Positional Encoding": "\\displaystyle L=I-D^{-1/2}AD^{-1/2},\\quad PE=U_{:,1:k}",
+    "Graph Mini-batch Sampling": "\\displaystyle \\mathcal{B}^{(l-1)}=\\bigcup_{v\\in\\mathcal{B}^{(l)}}Sample(\\mathcal{N}(v),s_l)",
+    "Ablation Study": "\\displaystyle \\Delta=Score(M_{full})-Score(M_{without\\ component})",
+    "Calibration": "\\displaystyle ECE=\\sum_m\\frac{|B_m|}{n}|acc(B_m)-conf(B_m)|",
     "Precision / Recall / F1": "\\displaystyle Precision=\\frac{TP}{TP+FP},\\quad Recall=\\frac{TP}{TP+FN},\\quad F1=\\frac{2PR}{P+R}",
     "ROC-AUC": "\\displaystyle TPR=\\frac{TP}{TP+FN},\\quad FPR=\\frac{FP}{FP+TN}"
   };
@@ -1847,6 +2039,20 @@ const termStudyPoints = {
   "GIN": ["sum集約とMLPで表現力を高める", "WLテストとの関係を説明する", "epsの役割を理解する"],
   "GVAE": ["潜在変数から隣接行列を再構成する", "内積デコーダの意味を説明する", "再構成項とKL項を分けて理解する"],
   "GraphSAGE": ["近傍サンプリングで大規模グラフに対応する", "自己特徴と近傍集約をconcatする", "mean/max/LSTM aggregatorの違いを理解する"],
+  "Graph Transformer": ["Attentionにグラフ構造バイアスを入れる", "全ノードAttentionはO(N^2)で重い", "Laplacian PEや距離バイアスの役割を説明する"],
+  "Heterogeneous GNN": ["ノード型とエッジ型を区別する", "関係ごとに重みを分ける理由を説明する", "メタパスや知識グラフ設定を理解する"],
+  "R-GCN": ["relationごとにW_rを持つ", "パラメータ爆発をbasis分解で抑える", "リンク予測や知識グラフ補完に使う"],
+  "Graph Contrastive Learning": ["正例ペアと負例ペアの作り方を説明する", "温度パラメータtauの効果を見る", "ラベルなしグラフ表現学習として理解する"],
+  "Over-squashing": ["遠距離情報が固定次元に圧縮される", "over-smoothingとは別問題", "rewiringやpositional encodingで緩和する"],
+  "Graph Positional Encoding": ["グラフに順序がない問題を補う", "Laplacian固有ベクトルの符号不定性に注意する", "Random Walk PEとの違いを見る"],
+  "Truncated BPTT": ["系列を短いchunkに分ける", "計算メモリと長期依存のトレードオフを見る", "hidden stateをdetachする理由を説明する"],
+  "Peephole LSTM": ["ゲートがセル状態を直接参照する", "通常LSTMとの式の違いを見る", "タイミング依存が強い系列での利点を説明する"],
+  "ConvLSTM": ["行列積を畳み込みに置き換える", "入力と隠れ状態がNCHWのテンソルになる", "動画・気象・時空間予測で使う"],
+  "Scheduled Sampling": ["教師強制と自己回帰入力を混ぜる", "Exposure Biasを緩和する", "teacher ratioのスケジュールを説明する"],
+  "CTC Loss": ["アラインメント未知の系列ラベルを扱う", "blankとcollapse処理を説明する", "forward algorithmで全経路を周辺化する"],
+  "Graph Mini-batch Sampling": ["全グラフ学習とmini-batch学習を区別する", "fanoutが計算量と近傍情報に効く", "サンプリングによる分散を理解する"],
+  "Ablation Study": ["提案要素を1つずつ外して比較する", "同じ条件で公平に比較する", "研究主張と実験表の対応を見る"],
+  "Calibration": ["確率の自信度と正解率のずれを見る", "ECEや信頼度図を説明する", "温度スケーリングで補正できる"],
   "Precision / Recall / F1": ["TP/FP/FNから式を説明する", "不均衡データでAccuracyだけを見ない", "Precision重視かRecall重視かをタスクで判断する"],
   "ROC-AUC": ["閾値を動かしたTPR/FPRを見る", "ランキング性能として解釈する", "PR-AUCとの使い分けを意識する"]
 };
@@ -2904,6 +3110,210 @@ class RocPoints:
         return fpr, tpr`
 };
 
+Object.assign(numpySamples, {
+  "Graph Transformer": `import numpy as np
+
+def softmax(x, axis=-1):
+    x = x - x.max(axis=axis, keepdims=True)
+    e = np.exp(x)
+    return e / e.sum(axis=axis, keepdims=True)
+
+class NumpyGraphTransformerLayer:
+    def __init__(self, in_dim, out_dim, seed=0):
+        rng = np.random.default_rng(seed)
+        self.Wq = rng.normal(scale=0.1, size=(in_dim, out_dim))
+        self.Wk = rng.normal(scale=0.1, size=(in_dim, out_dim))
+        self.Wv = rng.normal(scale=0.1, size=(in_dim, out_dim))
+
+    def forward(self, X, edge_bias, pos_bias):
+        Q, K, V = X @ self.Wq, X @ self.Wk, X @ self.Wv
+        scores = Q @ K.T / np.sqrt(Q.shape[-1])
+        scores = scores + edge_bias + pos_bias
+        attn = softmax(scores, axis=1)
+        return attn @ V, attn
+
+X = np.random.randn(5, 8)
+edge_bias = np.zeros((5, 5))
+pos_bias = -np.abs(np.arange(5)[:, None] - np.arange(5)[None, :])
+H, attention = NumpyGraphTransformerLayer(8, 4).forward(X, edge_bias, pos_bias)`,
+  "Heterogeneous GNN": `import numpy as np
+
+class NumpyHeteroLayer:
+    def __init__(self, in_dim, out_dim, relations):
+        rng = np.random.default_rng(0)
+        self.W = {r: rng.normal(scale=0.1, size=(in_dim, out_dim)) for r in relations}
+
+    def forward(self, X, adjacency_by_relation):
+        out = np.zeros((X.shape[0], next(iter(self.W.values())).shape[1]))
+        for relation, A in adjacency_by_relation.items():
+            degree = A.sum(axis=1, keepdims=True).clip(min=1)
+            out += (A / degree) @ X @ self.W[relation]
+        return np.maximum(out, 0)
+
+relations = ["author_writes_paper", "paper_cites_paper"]
+A = {r: np.eye(4) for r in relations}
+H = NumpyHeteroLayer(6, 3, relations).forward(np.random.randn(4, 6), A)`,
+  "R-GCN": `import numpy as np
+
+class NumpyRGCNLayer:
+    def __init__(self, in_dim, out_dim, relations):
+        rng = np.random.default_rng(1)
+        self.W_rel = {r: rng.normal(scale=0.1, size=(in_dim, out_dim)) for r in relations}
+        self.W_self = rng.normal(scale=0.1, size=(in_dim, out_dim))
+
+    def forward(self, X, A_rel):
+        H = X @ self.W_self
+        for r, A in A_rel.items():
+            norm = A.sum(axis=1, keepdims=True).clip(min=1)
+            H += (A / norm) @ X @ self.W_rel[r]
+        return np.tanh(H)
+
+H = NumpyRGCNLayer(5, 4, ["friend", "follows"]).forward(np.random.randn(6, 5), {"friend": np.eye(6), "follows": np.eye(6)})`,
+  "Graph Contrastive Learning": `import numpy as np
+
+def normalize(z):
+    return z / (np.linalg.norm(z, axis=1, keepdims=True) + 1e-8)
+
+def info_nce(z1, z2, tau=0.2):
+    z1, z2 = normalize(z1), normalize(z2)
+    logits = z1 @ z2.T / tau
+    logits = logits - logits.max(axis=1, keepdims=True)
+    prob = np.exp(logits) / np.exp(logits).sum(axis=1, keepdims=True)
+    return -np.mean(np.log(np.diag(prob) + 1e-8))
+
+view1 = np.random.randn(8, 16)
+view2 = view1 + 0.05 * np.random.randn(8, 16)
+loss = info_nce(view1, view2)`,
+  "Over-squashing": `import numpy as np
+
+def simple_bottleneck_score(A, source_nodes, target_node):
+    reachable = set(source_nodes)
+    boundary = 0
+    for u in reachable:
+        for v in np.where(A[u] > 0)[0]:
+            if v == target_node:
+                boundary += 1
+    return boundary / max(1, len(reachable))
+
+A = np.array([[0,1,0,0],[1,0,1,1],[0,1,0,0],[0,1,0,0]])
+score = simple_bottleneck_score(A, [0,2,3], target_node=1)`,
+  "Graph Positional Encoding": `import numpy as np
+
+def laplacian_positional_encoding(A, k):
+    degree = A.sum(axis=1)
+    D_inv_sqrt = np.diag(1 / np.sqrt(degree + 1e-8))
+    L = np.eye(A.shape[0]) - D_inv_sqrt @ A @ D_inv_sqrt
+    eigvals, eigvecs = np.linalg.eigh(L)
+    return eigvecs[:, 1:k+1], eigvals[1:k+1]
+
+A = np.array([[0,1,1],[1,0,0],[1,0,0]], dtype=float)
+pe, spectrum = laplacian_positional_encoding(A, k=2)`,
+  "Truncated BPTT": `import numpy as np
+
+class ChunkedRNNTrainer:
+    def __init__(self, chunk_size):
+        self.chunk_size = chunk_size
+
+    def iterate_chunks(self, X):
+        for start in range(0, X.shape[1], self.chunk_size):
+            yield X[:, start:start + self.chunk_size]
+
+X = np.random.randn(4, 100, 16)
+for chunk in ChunkedRNNTrainer(chunk_size=20).iterate_chunks(X):
+    # 実際の学習ではchunkごとにforward/backwardし、hiddenをdetachする
+    print(chunk.shape)`,
+  "Peephole LSTM": `import numpy as np
+
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+class PeepholeLSTMCell:
+    def __init__(self, input_dim, hidden_dim):
+        rng = np.random.default_rng(0)
+        self.Wxf = rng.normal(scale=0.1, size=(input_dim, hidden_dim))
+        self.Whf = rng.normal(scale=0.1, size=(hidden_dim, hidden_dim))
+        self.wcf = rng.normal(scale=0.1, size=(hidden_dim,))
+
+    def forget_gate(self, x_t, h_prev, c_prev):
+        return sigmoid(x_t @ self.Wxf + h_prev @ self.Whf + c_prev * self.wcf)
+
+cell = PeepholeLSTMCell(3, 5)
+f = cell.forget_gate(np.ones((2, 3)), np.zeros((2, 5)), np.zeros((2, 5)))`,
+  "ConvLSTM": `import numpy as np
+
+def conv2d_same(x, kernel):
+    n, h, w = x.shape
+    kh, kw = kernel.shape
+    pad_h, pad_w = kh // 2, kw // 2
+    padded = np.pad(x, ((0,0),(pad_h,pad_h),(pad_w,pad_w)))
+    out = np.zeros_like(x)
+    for i in range(h):
+        for j in range(w):
+            out[:, i, j] = np.sum(padded[:, i:i+kh, j:j+kw] * kernel, axis=(1,2))
+    return out
+
+frame = np.random.randn(2, 8, 8)
+hidden = conv2d_same(frame, np.ones((3, 3)) / 9)`,
+  "Scheduled Sampling": `import numpy as np
+
+def choose_decoder_input(y_true_prev, y_pred_prev, teacher_ratio):
+    use_teacher = np.random.rand(*y_true_prev.shape) < teacher_ratio
+    return np.where(use_teacher, y_true_prev, y_pred_prev)
+
+y_in = choose_decoder_input(np.array([1, 2, 3]), np.array([1, 4, 3]), teacher_ratio=0.7)`,
+  "CTC Loss": `import numpy as np
+
+def collapse_path(path, blank=0):
+    result = []
+    prev = None
+    for token in path:
+        if token != blank and token != prev:
+            result.append(token)
+        prev = token
+    return result
+
+path = [0, 1, 1, 0, 2, 2, 0]
+label = collapse_path(path)  # [1, 2]`,
+  "Graph Mini-batch Sampling": `import numpy as np
+
+def sample_neighbors(adj_list, seeds, fanout, rng=None):
+    rng = np.random.default_rng(0) if rng is None else rng
+    sampled = set(seeds)
+    frontier = list(seeds)
+    for node in frontier:
+        neigh = np.array(adj_list[node])
+        if len(neigh) > 0:
+            picked = rng.choice(neigh, size=min(fanout, len(neigh)), replace=False)
+            sampled.update(picked.tolist())
+    return sorted(sampled)
+
+adj = {0:[1,2,3], 1:[0,2], 2:[0,1], 3:[0]}
+nodes = sample_neighbors(adj, seeds=[0], fanout=2)`,
+  "Ablation Study": `import numpy as np
+
+results = {
+    "full_model": 0.842,
+    "no_attention": 0.811,
+    "no_positional_encoding": 0.824,
+}
+effect = {name: results["full_model"] - score for name, score in results.items() if name != "full_model"}
+print(effect)`,
+  "Calibration": `import numpy as np
+
+def expected_calibration_error(confidence, correct, n_bins=10):
+    edges = np.linspace(0, 1, n_bins + 1)
+    ece = 0.0
+    for lo, hi in zip(edges[:-1], edges[1:]):
+        mask = (confidence >= lo) & (confidence < hi)
+        if mask.any():
+            acc = correct[mask].mean()
+            conf = confidence[mask].mean()
+            ece += mask.mean() * abs(acc - conf)
+    return ece
+
+ece = expected_calibration_error(np.array([0.9, 0.6, 0.4]), np.array([1, 0, 1]))`
+});
+
 const torchSamples = {
   "np.c_": `import numpy as np
 import torch
@@ -3603,6 +4013,148 @@ target = torch.tensor([1, 0, 1, 0])
 threshold = 0.5
 pred = (scores >= threshold).long()`
 };
+
+Object.assign(torchSamples, {
+  "Graph Transformer": `import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class GraphTransformerLayer(nn.Module):
+    def __init__(self, dim):
+        super().__init__()
+        self.q = nn.Linear(dim, dim)
+        self.k = nn.Linear(dim, dim)
+        self.v = nn.Linear(dim, dim)
+        self.out = nn.Linear(dim, dim)
+
+    def forward(self, x, edge_bias, pos_bias):
+        scores = self.q(x) @ self.k(x).transpose(-1, -2) / (x.size(-1) ** 0.5)
+        attn = F.softmax(scores + edge_bias + pos_bias, dim=-1)
+        return self.out(attn @ self.v(x)), attn`,
+  "Heterogeneous GNN": `import torch
+import torch.nn as nn
+
+class HeterogeneousGNNLayer(nn.Module):
+    def __init__(self, in_dim, out_dim, relations):
+        super().__init__()
+        self.weight = nn.ModuleDict({r: nn.Linear(in_dim, out_dim, bias=False) for r in relations})
+
+    def forward(self, x, adj_by_relation):
+        out = 0
+        for relation, adj in adj_by_relation.items():
+            out = out + adj @ self.weight[relation](x)
+        return torch.relu(out)`,
+  "R-GCN": `import torch
+import torch.nn as nn
+
+class RGCNLayer(nn.Module):
+    def __init__(self, in_dim, out_dim, relations):
+        super().__init__()
+        self.rel = nn.ModuleDict({r: nn.Linear(in_dim, out_dim, bias=False) for r in relations})
+        self.self_loop = nn.Linear(in_dim, out_dim, bias=False)
+
+    def forward(self, x, adj_rel):
+        h = self.self_loop(x)
+        for r, adj in adj_rel.items():
+            degree = adj.sum(dim=-1, keepdim=True).clamp_min(1)
+            h = h + (adj / degree) @ self.rel[r](x)
+        return torch.relu(h)`,
+  "Graph Contrastive Learning": `import torch
+import torch.nn.functional as F
+
+def graph_info_nce(z1, z2, temperature=0.2):
+    z1 = F.normalize(z1, dim=-1)
+    z2 = F.normalize(z2, dim=-1)
+    logits = z1 @ z2.T / temperature
+    labels = torch.arange(z1.size(0), device=z1.device)
+    return F.cross_entropy(logits, labels)`,
+  "Over-squashing": `import torch
+
+def message_bottleneck_indicator(adj, source_mask, target_index):
+    boundary_edges = adj[source_mask, target_index].sum()
+    reachable = source_mask.float().sum().clamp_min(1)
+    return boundary_edges / reachable`,
+  "Graph Positional Encoding": `import torch
+
+def laplacian_pe(adj, k):
+    degree = adj.sum(dim=1)
+    d_inv_sqrt = torch.diag(torch.rsqrt(degree + 1e-8))
+    lap = torch.eye(adj.size(0), device=adj.device) - d_inv_sqrt @ adj @ d_inv_sqrt
+    eigvals, eigvecs = torch.linalg.eigh(lap)
+    return eigvecs[:, 1:k + 1]`,
+  "Truncated BPTT": `import torch
+import torch.nn as nn
+
+rnn = nn.GRU(input_size=16, hidden_size=32, batch_first=True)
+hidden = None
+for chunk in torch.randn(4, 100, 16).split(20, dim=1):
+    out, hidden = rnn(chunk, hidden)
+    loss = out.pow(2).mean()
+    loss.backward()
+    hidden = hidden.detach()  # chunkをまたいで計算グラフを伸ばし続けない`,
+  "Peephole LSTM": `import torch
+import torch.nn as nn
+
+class PeepholeForgetGate(nn.Module):
+    def __init__(self, input_dim, hidden_dim):
+        super().__init__()
+        self.x = nn.Linear(input_dim, hidden_dim)
+        self.h = nn.Linear(hidden_dim, hidden_dim, bias=False)
+        self.c = nn.Parameter(torch.zeros(hidden_dim))
+
+    def forward(self, x_t, h_prev, c_prev):
+        return torch.sigmoid(self.x(x_t) + self.h(h_prev) + c_prev * self.c)`,
+  "ConvLSTM": `import torch
+import torch.nn as nn
+
+class ConvLSTMInputGate(nn.Module):
+    def __init__(self, in_channels, hidden_channels):
+        super().__init__()
+        self.x = nn.Conv2d(in_channels, hidden_channels, 3, padding=1)
+        self.h = nn.Conv2d(hidden_channels, hidden_channels, 3, padding=1)
+
+    def forward(self, x_t, h_prev):
+        return torch.sigmoid(self.x(x_t) + self.h(h_prev))`,
+  "Scheduled Sampling": `import torch
+
+def scheduled_decoder_input(y_true_prev, y_pred_prev, teacher_ratio):
+    use_teacher = torch.rand_like(y_true_prev.float()) < teacher_ratio
+    return torch.where(use_teacher, y_true_prev, y_pred_prev)`,
+  "CTC Loss": `import torch
+import torch.nn as nn
+
+ctc = nn.CTCLoss(blank=0, zero_infinity=True)
+log_probs = torch.randn(50, 4, 20).log_softmax(dim=-1)  # (T, N, C)
+targets = torch.randint(1, 20, (4, 12), dtype=torch.long)
+input_lengths = torch.full((4,), 50, dtype=torch.long)
+target_lengths = torch.full((4,), 12, dtype=torch.long)
+loss = ctc(log_probs, targets, input_lengths, target_lengths)`,
+  "Graph Mini-batch Sampling": `import torch
+
+def sample_edge_subgraph(edge_index, seed_nodes):
+    src, dst = edge_index
+    mask = torch.isin(src, seed_nodes) | torch.isin(dst, seed_nodes)
+    return edge_index[:, mask]`,
+  "Ablation Study": `import pandas as pd
+
+results = pd.DataFrame([
+    {"setting": "full", "auc": 0.842},
+    {"setting": "without_attention", "auc": 0.811},
+    {"setting": "without_positional_encoding", "auc": 0.824},
+])
+results["drop_from_full"] = results.loc[0, "auc"] - results["auc"]`,
+  "Calibration": `import torch
+
+def torch_ece(confidence, correct, n_bins=10):
+    ece = torch.zeros((), device=confidence.device)
+    edges = torch.linspace(0, 1, n_bins + 1, device=confidence.device)
+    for lo, hi in zip(edges[:-1], edges[1:]):
+        mask = (confidence >= lo) & (confidence < hi)
+        if mask.any():
+            ece = ece + mask.float().mean() * (correct[mask].float().mean() - confidence[mask].mean()).abs()
+    return ece`
+});
+
 
 function getNumpySample(concept) {
   if (numpySamples[concept.title]) {
@@ -4372,3 +4924,4 @@ nextQuestion.addEventListener("click", () => {
   currentQuiz = filteredQuizIndexes[Math.min(filteredQuizIndexes.length - 1, position + 1)];
   renderQuiz();
 });
+
